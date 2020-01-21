@@ -27,3 +27,10 @@ const PORT = process.env.PORT
 - Specify start script: tenemos que decir a Heroku que comando correr para arrancar nuestro server. Esto tambien se lo comunicamos a Heroku en el package.json, y obviamente le vamos a decir que use nuestro index.js con el comando node para arrancar el puto server. "start": "node index.js"
 - Create .gitignore file: tenemos que crear el gitignore para que no commitiemos ninguna dependencia que hayamos instalado. Asique dentro del .gitignore vamos a agregar node_modules
 
+### Deployment:
+- Hacernos cuenta en Heroku
+- Inicializar repo local en la carpeta del proyecto con git init
+- instalar CLI de Heroku
+- Dentro de la carpeta de desarrollo, ejecutamos el comando 'heroku login'
+- Despues de logearnos, le tiramos un 'heroku create' para crear la app heroku 
+- Vamos a ver que nos tira 2 links. El primero es el que vamos a usar si queremos usar nuestra app desde el browser. El segundo es nuestro 'Deployment Target'. Es el repositorio a donde vamos a pushear nuestro local repo. 
