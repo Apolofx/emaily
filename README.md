@@ -38,4 +38,11 @@ const PORT = process.env.PORT
 - Entonces hacemos un git remote add heroku 'ruta de repo heroku que nos tiro el comando anterior' 
 
 ### SUBSEQUENT Deploys:
+- Guardamos los cambios
+- git add . --> git commit
+- Deployamos la app con Git--> git push heroku master
+- Y una vez que pushea completo, podemos actualizar la pagina y nuestra app se vera con los nuevos cambios
+
+## App flow-chart
+### Google OAuth:
 
