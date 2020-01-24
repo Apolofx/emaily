@@ -27,6 +27,8 @@ app.get(
   })
 );
 
+app.get('/auth/google/callback', passport.authenticate('google'));
+
 const PORT = process.env.PORT || 5000;
 /*Esta linea, toma el numero del puerto que nos paso Heroku como
 variable de entorno al iniciar la ejecucion de la app. Esta variable de
