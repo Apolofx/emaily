@@ -1,14 +1,31 @@
 const express = require("express");
+const passport = require("passport");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const keys = require("./config/keys");
+
 const app = express();
-app.get("/", (req, res) => {
-  res.send({ bye: "trolo" });
-});
-/* Route Handler:
-    ver que app.get(ruta, funcion) tiene 2 paramentros.
-    el primero es la ruta a donde se dirige el incoming request
-    El segundo es parametro es la funcion (arrow function) que
-    se va a ejecutar cuando llegue una request. Seria como un callback.
-*/
+
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: keys.googleClientID,
+      clientSecret: keys.googleClientID,
+      callbackURL: "/auth/google/callback"
+    },
+    accesToken => {
+      console.log(accesToken);
+    }
+  )
+);
+/*new GoogleStrategy crea una nueva instancia de GoogleStrategy.
+como argumentos a esa instancia le vamos a pasar una configuracion
+para que sepa como autenticar los usuarios*/
+app.get(
+  "/auth/google",
+  passport.authenticate("google", {
+    scope: ["profile", "email"]
+  })
+);
 
 const PORT = process.env.PORT || 5000;
 /*Esta linea, toma el numero del puerto que nos paso Heroku como 
