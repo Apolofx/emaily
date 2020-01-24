@@ -1,7 +1,7 @@
 const express = require("express");
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const keys = require("./config/keys");
+const keys = require("/config/keys"));
 
 const app = express();
 
@@ -28,11 +28,11 @@ app.get(
 );
 
 const PORT = process.env.PORT || 5000;
-/*Esta linea, toma el numero del puerto que nos paso Heroku como 
-variable de entorno al iniciar la ejecucion de la app. Esta variable de 
-entorno solo la vamos a tener si estamos usando la version de la app deployada 
-en Heroku. De lo contrario, si estamos usando nuestro servidor local, el puerto 
-va a ser el que determine Node a la hora de levantar el servidor. En nuestro caso 
+/*Esta linea, toma el numero del puerto que nos paso Heroku como
+variable de entorno al iniciar la ejecucion de la app. Esta variable de
+entorno solo la vamos a tener si estamos usando la version de la app deployada
+en Heroku. De lo contrario, si estamos usando nuestro servidor local, el puerto
+va a ser el que determine Node a la hora de levantar el servidor. En nuestro caso
 PORT : 5000
  */
 
