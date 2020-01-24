@@ -1,5 +1,5 @@
 # Notas
-En este bloc de notas voy a ir escribiendo todo lo que considero indispensable o importante para el desarrollo de una App con este stack de tecnologias. 
+En este bloc de notas voy a ir escribiendo todo lo que considero indispensable o importante para el desarrollo de una App con este stack de tecnologias.
 El stack involucra: React, Node, Express.
 React como libreria principal para el desarrollo front end de la App y la logica de negocio.
 Node como runtime de la app.
@@ -10,7 +10,7 @@ Express como Rout Handler. Este se encuentra recibe las HTTP reqs a traves de No
 1) Creamos la carpeta raiz contenedora del server. (mkdir server)
 2) Entramos en esta carpeta y hacemos un 'npm init' y le damos todo que si.
 3)npm install --save express
-4)Creamos el archivo index.js. Dentro de index.js vamos a tener 2 lineas de codigo iniciales que sirven para llamar al modulo express, para que node haga uso del mismo. Estas lineas son las siguientes. 
+4)Creamos el archivo index.js. Dentro de index.js vamos a tener 2 lineas de codigo iniciales que sirven para llamar al modulo express, para que node haga uso del mismo. Estas lineas son las siguientes.
 ```javascript
 const express = require('express')
 const app = express();
@@ -33,9 +33,9 @@ const PORT = process.env.PORT
 - Inicializar repo local en la carpeta del proyecto con git init
 - instalar CLI de Heroku
 - Dentro de la carpeta de desarrollo, ejecutamos el comando 'heroku login'
-- Despues de logearnos, le tiramos un 'heroku create' para crear la app heroku 
+- Despues de logearnos, le tiramos un 'heroku create' para crear la app heroku
 - Vamos a ver que nos tira 2 links. El primero es el que vamos a usar si queremos usar nuestra app desde el browser. El segundo es nuestro 'Deployment Target'. Es el repositorio a donde vamos a pushear nuestro local repo.
-- Entonces hacemos un git remote add heroku 'ruta de repo heroku que nos tiro el comando anterior' 
+- Entonces hacemos un git remote add heroku 'ruta de repo heroku que nos tiro el comando anterior'
 
 ### SUBSEQUENT Deploys:
 - Guardamos los cambios
@@ -48,8 +48,8 @@ const PORT = process.env.PORT
 - Ver OAuth flow-chart para entender el flujo de control que se lleva a cabo entre el cliente, el servidor, y google.
 - PassportJS library--> Passport y Passport Strategy
 - Dependiendo con que servicio (Google, Facebook, github, etc) vamos a hacer la autenticacion, para manejarla tenemos que usar el Passport Strategy correspondiente a ese metodo. Entonces de esta manera primero instalamos la libreria base que es Passport, y despues instalamos el passport strategy correspondiente al servicio que usemos.
-- Instalamos Passport y el Passport Strategy de google-oauth dentro de nuestra carpeta de desarrollo, `npm install --save passport passport-google-oauth20
-- Nos loggeamos en console.developers.google.com' y creamos nuestro proyecto. Despues buscamos la api de google+ y configuramos las credenciales para obtener un ID de cliente. 
+- Instalamos Passport y el Passport Strategy de google-oauth dentro de nuestra carpeta de desarrollo, `npm install --save passport passport-google-oauth20`
+- Nos loggeamos en console.developers.google.com' y creamos nuestro proyecto. Despues buscamos la api de google+ y configuramos las credenciales para obtener un ID de cliente.
 - clientID: Public token, la podemos compartir, lo unico que hace es identificar nuestra aplicacion a los servidores de google.
 - clientSecret: no la tenemos que compartir con nadie. Sino ellos tendrian privilegios en nuestra cuenta.
-- Entonces tenemos que encontrar una manera segura de acceder a la clientSecret en nuestro codigo, sin vulnerar nuestra seguridad en el caso de que queramos por ejemplo subir el codgio a github. Es decir, tenemos que evitar hardcodearla. 
+- Entonces tenemos que encontrar una manera segura de acceder a la clientSecret en nuestro codigo, sin vulnerar nuestra seguridad en el caso de que queramos por ejemplo subir el codgio a github. Es decir, tenemos que evitar hardcodearla.
