@@ -1,16 +1,16 @@
 # Notas
 En este bloc de notas voy a ir escribiendo todo lo que considero indispensable o importante para el desarrollo de una App con este stack de tecnologias.
-El stack involucra: React, Node, Express.
+El stack involucra: React, Node, Express y PassportJS
 React como libreria principal para el desarrollo front end de la App y la logica de negocio.
 Node como runtime de la app.
-Express como Rout Handler. Este se encuentra recibe las HTTP reqs a traves de Node, y decide en base al contenido de la misma, que ruta de funciones le vamos a devolver como response.
+Express como Rout Handler. Este recibe las HTTP reqs a traves de Node, y decide en base al contenido de la misma, que ruta de funciones le vamos a devolver como response.
 
-## Inicializaion del proyecto:
+## Inicializacion del proyecto:
 
 1) Creamos la carpeta raiz contenedora del server. (mkdir server)
 2) Entramos en esta carpeta y hacemos un 'npm init' y le damos todo que si.
-3)npm install --save express
-4)Creamos el archivo index.js. Dentro de index.js vamos a tener 2 lineas de codigo iniciales que sirven para llamar al modulo express, para que node haga uso del mismo. Estas lineas son las siguientes.
+3) npm install --save express
+4) Creamos el archivo index.js. Dentro de index.js vamos a tener 2 lineas de codigo iniciales que sirven para llamar al modulo express, para que node haga uso del mismo. Estas lineas son las siguientes.
 ```javascript
 const express = require('express')
 const app = express();
@@ -21,7 +21,7 @@ En la primer linea importamos el modulo (ver que usamos CommonJS y no usamos el 
 
 ## Deployment en Heroku
 Para testear la app localmente, podemos levantar el localserver directamente instanciando app = express(), utilizando el metodo get de app y escuchando en el puerto 5000.
-`var express = require('express');
+```javascript
 var app = express();
 
 app.get('/', function (req, res) {
@@ -31,8 +31,9 @@ app.get('/', function (req, res) {
 app.listen(5000, function () {
   console.log('Example app listening on port 5000!');
 });
-`
-En la consola tecleamos `node index.js` y automaticamente tenemos un servidor local escuchando a todas las peticiones que se hagan a traves del puerto designado. 
+var express = require('express');
+```
+En la consola tecleamos `node index.js` y automaticamente tenemos un servidor local escuchando a todas las peticiones que se hagan a traves del puerto designado.
 ### Deployment Checklist
 - Dynamic Port Binding: Tenemos que configurar nuestra app para que escuche el puerto que nos asigne Heroku. Para esto, en nuestro index.js, antes de la linea app.listen(), escribimos:
 ```javascript
@@ -57,7 +58,8 @@ const PORT = process.env.PORT
 - Deployamos la app con Git--> git push heroku master
 - Y una vez que pushea completo, podemos actualizar la pagina y nuestra app se vera con los nuevos cambios
 
-## App flow-chart
+## App workflow
+![Google OAuth flow chart]("https://github.com/Apolofx/emaily/blob/master/OAuth%20flow-chart.jpg")
 ### Google OAuth:
 - Ver OAuth flow-chart para entender el flujo de control que se lleva a cabo entre el cliente, el servidor, y google.
 - PassportJS library--> Passport y Passport Strategy
