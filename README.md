@@ -57,10 +57,16 @@ const PORT = process.env.PORT
 - git add . --> git commit
 - Deployamos la app con Git--> git push heroku master
 - Y una vez que pushea completo, podemos actualizar la pagina y nuestra app se vera con los nuevos cambios
+
 ![](images/deploy.jpg)
 
+
+
 ## App workflow
+
 ![](images/OAuth.jpg)
+
+
 ### Google OAuth:
 - Ver OAuth flow-chart para entender el flujo de control que se lleva a cabo entre el cliente, el servidor, y google.
 - PassportJS library--> Passport y Passport Strategy
