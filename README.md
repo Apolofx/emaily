@@ -67,6 +67,12 @@ const PORT = process.env.PORT
 ![](images/OAuth.jpg)
 
 
+## Nodemon:
+Nodemon es un paquete de npm que nos facilita el trabajo de reiniciar el servidor local de node cada vez que hacemos un cambio en la aplicacion.
+`npm install nodemon`.
+*package.json "script" object*:
+  Una vez que instalamos nodemo, podemos agregar un shortcut para ejecutarlo como un script de npm, agregando el atributo "dev": "nodemon index.js" al objeto "script" del package.json. Despues ya podemos ejecutar en la consola `npm run dev`, y el servidor se va a reiniciar solo cada vez que introduzcamos un cambio en la app. 
+
 ### Google OAuth:
 - Ver OAuth flow-chart para entender el flujo de control que se lleva a cabo entre el cliente, el servidor, y google.
 - PassportJS library--> Passport y Passport Strategy
