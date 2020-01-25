@@ -1,36 +1,8 @@
 const express = require("express");
-const passport = require("passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const keys = require("./config/keys.js");
+require('./services/passport');
 
 const app = express();
-
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: keys.googleClientID,
-      clientSecret: keys.googleClientSecret,
-      callbackURL: "/auth/google/callback"
-    },
-    (accesToken, refreshToken, profile, done) => {
-      console.log('acces token', accesToken);
-      console.log('refresh token', refreshToken);
-      console.log('profile:', profile);
-    }
-  )
-);
-/*new GoogleStrategy crea una nueva instancia de GoogleStrategy.
-como argumentos a esa instancia le vamos a pasar una configuracion
-para que sepa como autenticar los usuarios*/
-app.get(
-  "/auth/google",
-  passport.authenticate("google", {
-    scope: ["profile", "email"]
-  })
-);
-
-app.get('/auth/google/callback', passport.authenticate('google'));
-
+require('./routes/authRoutes')(app);
 const PORT = process.env.PORT || 5000;
 /*Esta linea, toma el numero del puerto que nos paso Heroku como
 variable de entorno al iniciar la ejecucion de la app. Esta variable de
