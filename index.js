@@ -1,8 +1,16 @@
 const express = require("express");
+const mongoose = require('mongoose');
+const keys = require('./config/keys');
+require('./models/User');
 require('./services/passport');
 
+mongoose.connect(keys.mongoURI);
+/*mongoose es la libreria que se usa para contectarse con MongoDB*/
+
 const app = express();
+
 require('./routes/authRoutes')(app);
+
 const PORT = process.env.PORT || 5000;
 /*Esta linea, toma el numero del puerto que nos paso Heroku como
 variable de entorno al iniciar la ejecucion de la app. Esta variable de
