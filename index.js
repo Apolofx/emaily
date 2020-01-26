@@ -4,7 +4,7 @@ const keys = require('./config/keys');
 require('./models/User');
 require('./services/passport');
 
-mongoose.connect(keys.mongoURI);
+mongoose.connect(keys.mongoURI, {useNewUrlParser: true });
 /*mongoose es la libreria que se usa para contectarse con MongoDB*/
 
 const app = express();

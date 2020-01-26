@@ -105,7 +105,7 @@ El metodo de creacion de model class solo lo ejecuta si no exista esa model clas
 ### Agregando un nuevo registro a la DB:
 Recordemos que dentro de **./services/passport.js** tenemos la instancia de GoogleStrategy, la cual tiene como segundo argumento, un callback que nos devuelve 4 objetos: entre ellos, tenemos el objeto *profile*. De ahi es que vamos a extraer el atributo 'id' para guardarlo en la DB como prueba de que el cliente se registro.
 La Model Class de la coleccion *users* la tenemos definida en **User.js**.
-Ahi vemos como usamos la clase Schema del objeto mongoose para crear un nuevo esquema. Hay un temita con esto, y es que por una cuestion de como trabaja mongoose, no podemos simplemente exportar la instancia a esta clase e importarla en donde queramos. Podmos considerar que una vez que se instancio es Schema, despues solo necesitamos hacer un require de mongoose en el archivo que la queramos usar, e instanciar una nueva clase en doonde a mongoose.model le pasamos solo como parametro la coleccion que vamos a modificar en esa instancia. Ejemplo:
+Ahi vemos como usamos la clase Schema del objeto mongoose para crear un nuevo esquema. Hay un temita con esto, y es que por una cuestion de como trabaja mongoose, no podemos simplemente exportar esta clase e importarla en donde queramos. Podmos considerar que una vez que se creó ese new Schema, despues solo necesitamos hacer un require de mongoose en el archivo que la queramos usar, e instanciar una nueva clase en doonde a mongoose.model le pasamos solo como parametro la coleccion que vamos a modificar en esa instancia. Ejemplo:
 ```javascript
 const mongoose = require('mongoose');
 
@@ -115,3 +115,4 @@ const User = mongoose.model('users'); //Aca User hereda el Schema que ya le dimo
 ```javascript
 new User({ googleId: profile.id }).save(); //Donde googleId es la propiedad que queremos guardar para este nuevo registro de la coleccion users
 ```
+**Otro detalle a tener en cuenta**, es que el orden de los `require()` importa. De hecho, en el *index.js*, tenemos que importar primero *models/User* y despues *services/passport*, porque sino el codigo que hay en passport va a querer empezar a usar la coleccion `mongoose.model('users')` sin que todavia se haya instanciado en *User.js*.
