@@ -62,7 +62,7 @@ const PORT = process.env.PORT
 
 
 
-## App workflow
+## Googe Auth flow
 
 ![](images/OAuth.jpg)
 
