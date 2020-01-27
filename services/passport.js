@@ -10,8 +10,13 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser((id, done) => {
-
-})
+  //deserializeUser nos entrega el id
+  // que vino en la cookie que nos envio el browser del cliente en la request.
+  User.findById(id)
+  .then(user => {
+    done(null, user);
+  })
+});
 
 passport.use(
   new GoogleStrategy(
@@ -21,7 +26,7 @@ passport.use(
       callbackURL: "/auth/google/callback"
     },
     (accesToken, refreshToken, profile, done) => {
-      User.findOne({ googleId: profile.id }).then((existingUser) => {
+      User.findOne({ googleId: profile.id }).then(existingUser => {
         if (existingUser) {
           done(null, existingUser); //done() le avisa a passport que ya terminamos
         } else {
