@@ -12,10 +12,9 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser((id, done) => {
   //deserializeUser nos entrega el id
   // que vino en la cookie que nos envio el browser del cliente en la request.
-  User.findById(id)
-  .then(user => {
+  User.findById(id).then(user => {
     done(null, user);
-  })
+  });
 });
 
 passport.use(
