@@ -178,7 +178,7 @@ app.use(
 );
 ```
 
-En este bloque, utilizamos la libreria cookie-session para definir una session de abierta por 30 dias. La cookieKey la agregamos al archivo config/keys.js
+En este bloque, utilizamos la libreria cookie-session para definir una session abierta por 30 dias. La cookieKey la creamos nosotros y la agregamos al archivo config/keys.js
 
 Despues de esto tenemos que decirle a passport que haga uso de las cookies para manejar la autenticacion.
 
@@ -189,3 +189,20 @@ app.use(passport.session());
 
 Entonces, una vez que obtenemos la autorizacion de google, registramos el usuario, o en su defecto chequeamos que este registrado, el flujo de seguimiento de sesion de usuario es el siguiente
 ![](images/after-auth-flow.png)
+Ahora podemos crear un endpoint de nuestra api para probar que podemos acceder al usuario a traves de la cookie. Agregamos entonces a nuestro route handler lo siguiente,
+
+```javascript
+app.get("/api/current_user", (req, res) => {
+  res.send(req.user);
+});
+```
+
+PassportJS automaticamente carga la propiedad user en el objeto req (**req.user**). Es por eso que podemos acceder a el cuando el usuario hace una peticion.
+Ademas, Passport acopla funciones al objeto req, que podemos usar para maniuplar el user authentication status. Uno que nos importa es req.logout(). Y podemos agregar otro endpoint a nuestra api utilizando el metodo logout().
+
+```javascript
+app.get("/api/logout", (req, res) => {
+  req.logout();
+  res.send(req.user);
+});
+```
