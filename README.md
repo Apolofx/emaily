@@ -253,6 +253,18 @@ Entonces nuestro nuevo arbol de archivos *./config* se convierte en:
 |--keys.js _(commit)\_
 
 **keys.js** va a contener la logica para exportar las keys correspondientes
+
+```javascript
+//logica para saber que ceredenciales usar
+if (process.env.NODE_ENV === "production") {
+  //we are in production return prod keys
+  module.exports = require("./prod");
+} else {
+  //si estamos en dev, entonces devolvemos las dev keys, que estan en./dev
+  module.exports = require("./dev");
+}
+```
+
 **prod.js** va a contener el objeto keys correspondiente a las keys importadas desde el entorno de produccion (Heroku) como variables de entorno.
 _Ej:_
 
@@ -269,8 +281,27 @@ Para esto tenemos que guardarlas en la configuracion de Heroku:
 3. Settings
 4. Config Variables --> Reveal Config Vars
 5. Copiamos cada uno de los nombres de las variables de entorno de _prod.js_ y lo agregamos a la lista, incorporando el valor de cada Key de produccion que hayamos generado.
-   **dev.js** va a contener el objeto keys, con las claves asignadas para development hardcodeadas en el mismo archivo. Por eso no las commiteamos.
+
+**dev.js** va a contener el objeto keys, con las claves asignadas para development hardcodeadas en el mismo archivo. Por eso no las commiteamos.
 
 ### NODE_ENV
 
 Cuando deployamos nuestra app a Heroku, se crea esta variable que nos dice si estamos en un entorno de produccion o no.
+
+### Google Error: redirect_uri_mismatch
+
+Este error se debe a que google espera que le pasemos un dominio **https** y esta recibiendo un dominio **http**.
+
+1. El primer factor que causa este error es GoogleStrategy. Si vamos a passport.js, vemos que la propiedad callbackURL que le pasamos a GoogleStrategy esta escrita como un relative path (_'/auth/google/callback'_). Lo que hace GoogleStrategy es autocompletar ese dominio con localhost:5000 o con la direccion de nuestra App en Heroku, segun sea el caso.
+2. Lo que hace GoogleStrategy esta bien, pero como en nuestro caso la request viene de un Proxy de Heroku, entonces la request no es mas considerada HTTPS, porque internamente no va a confiar en requests que vengan a de un proxy.
+
+Una solucion a este problema, es agregar la opcion **proxy: true** a nuestra instancia de GoogleStrategy.
+
+```javascript
+{
+      clientID: keys.googleClientID,
+      clientSecret: keys.googleClientSecret,
+      callbackURL: "/auth/google/callback",
+      proxy: true
+    },
+```
