@@ -187,8 +187,10 @@ app.use(passport.initialize());
 app.use(passport.session());
 ```
 
-Entonces, una vez que obtenemos la autorizacion de google, registramos el usuario, o en su defecto chequeamos que este registrado, el flujo de seguimiento de sesion de usuario es el siguiente
+Entonces, una vez que obtenemos la autorizacion de google, registramos el usuario, o en su defecto chequeamos que este registrado, el flujo de seguimiento de sesion de usuario es el siguiente:
+
 ![](images/after-auth-flow.png)
+
 Ahora podemos crear un endpoint de nuestra api para probar que podemos acceder al usuario a traves de la cookie. Agregamos entonces a nuestro route handler lo siguiente,
 
 ```javascript
@@ -206,3 +208,37 @@ app.get("/api/logout", (req, res) => {
   res.send(req.user);
 });
 ```
+
+## Express Middlewares
+
+Los middleware son pequeñas funciones que pueden ser utilizadas para modificar requests entrantes en nuestra app, antes de ser enviadas a los Route Handlers.
+La **principal** utilidad en nuestro codigo, es la de procesar tareas comunes a todos los route handlers, para no ser repetitivos y redundantes. De esta manera, lo que hacemos es una especia de preprocesamiento de la request.
+Sin embargo, tambien podemos elegir como conectar estos middlewares, y de esa manera determinar su uso para un subconjunto de routehandlers en vez de usarlo en todos los casos.
+![](images/middlewares.png)
+
+En nuestro codigo, el primero _middleware_ con el que nos encontramos es un **cookieSession**:
+
+```javascript
+app.use(
+  cookieSession({
+    maxAge: 30 * 24 * 60 * 60 * 1000, //30 dias expresados en ms.
+    keys: [keys.cookieKey]
+  })
+);
+```
+
+Lo que hace cookieSession es sacar la data que trae la cookie y asignarla a la propiedad _req.session_.
+
+### cookie-session vs. express-session
+
+Si leemos la documentacion de Express, vamos a ver que nos recomienda usar express-session para el manejo de la sesion de usuario. La principal diferencia entre el paquete cookie-session y express-session, es que cookie-session sirve para guardar pequeña cantidad de informacion del lado del cliente, creo que algo asicomo 4kB, mientras que mediante express-session, la informacion se guardar en el serverside, pudiendo elegir entre muchas opciones de cloud services, y podemos almacenar mucha mayor cantidad de informacion. En nuestro caso no era necesario, ya que solo necesitabamos guardar un ID en la cookie, y eso con cookie-session alcanza y sobra, y nos ahorra el trabajo de tener que configurar la parte de almacenamiento externo que tendriamos con express-session.
+
+## Production Credentials Set
+
+### Keys.js
+
+En este punto lo ideal es separar Keys en 2 archivos. Uno para Dev y otro para Production.
+El keys.js (dev) lo tendriamos en nuestro almacenamiento local para hacer todos los tests. El keys.js (prod) lo tendriamos almacenado remotamente, y seria el que tenga las credenciales para todo lo que va en produccion. Una razon para hacer esto, es que si de alguna manera las credenciales que tenemos localmente llegan a manos de otros, nuestra aplicacion ni los datos corren peligro, solo eliminamos todo lo que tenga que ver con la app de testing y listo.
+La otra razon, es que nos permite tener 2 bases de datos distintas en MongoDB. Una para produccion, que es la que no vamos a tocar nunca una vez deployada, y una para testing, que es a la que podemos manipular y modificar a gusto con el fin de testear cada feature.
+
+Para **Google+ API** tenemos que volver a ir a la consola de desarrollador de google, y creamos un nuevo proyecto _"emaily-prod"_. Y hacemos la misma configuracion que para la version dev. Vamos a credentials y creamos las OAuth ID. Vamos a tener que configurar tambien la apariencia del cartel de autorizacion de google, por lo que aca si conviene dedicarle un tiempito ya que va a ser la version final que va a ver el cliente. Es decir, agregarle un logo, descripcion, email de contacto, etc.
