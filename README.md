@@ -1,10 +1,10 @@
 # Notas
 
 En este bloc de notas voy a ir escribiendo todo lo que considero indispensable o importante para el desarrollo de una App con este stack de tecnologias.
-El stack involucra: React, Node, Express y PassportJS
-React como libreria principal para el desarrollo front end de la App y la logica de negocio.
+El stack involucra: React, Node, Express y PassportJS.
+React como libreria principal para el desarrollo front end de la App.
 Node como runtime de la app.
-Express como Rout Handler. Este recibe las HTTP reqs a traves de Node, y decide en base al contenido de la misma, que ruta de funciones le vamos a devolver como response.
+Express como Route Handler. Este recibe las HTTP reqs a traves de Node, y decide en base al contenido de la misma, que ruta de funciones le vamos a devolver como response.
 
 ## Inicializacion del proyecto:
 
@@ -238,20 +238,20 @@ Si leemos la documentacion de Express, vamos a ver que nos recomienda usar expre
 ### Keys.js
 
 En este punto lo ideal es separar Keys en 2 archivos. Uno para Dev y otro para Production.
-El keys.js (dev) lo tendriamos en nuestro almacenamiento local para hacer todos los tests. El keys.js (prod) lo tendriamos almacenado remotamente, y seria el que tenga las credenciales para todo lo que va en produccion. Una razon para hacer esto, es que si de alguna manera las credenciales que tenemos localmente llegan a manos de otros, nuestra aplicacion ni los datos corren peligro, solo eliminamos todo lo que tenga que ver con la app de testing y listo.
+El keys.js (dev) lo tendriamos en nuestro almacenamiento local para hacer todos los tests. El keys.js (prod) lo tendriamos almacenado remotamente, y seria el que tenga las credenciales para todo lo que va en produccion. Una razon para hacer esto, es que si de alguna manera las credenciales que tenemos localmente llegan a manos de otros, nuestra aplicacion y los datos corren peligro, solo eliminamos todo lo que tenga que ver con la app de testing y listo.
 La otra razon, es que nos permite tener 2 bases de datos distintas en MongoDB. Una para produccion, que es la que no vamos a tocar nunca una vez deployada, y una para testing, que es a la que podemos manipular y modificar a gusto con el fin de testear cada feature.
 
 Para **Google+ API** tenemos que volver a ir a la consola de desarrollador de google, y creamos un nuevo proyecto _"emaily-prod"_. Y hacemos la misma configuracion que para la version dev. Vamos a credentials y creamos las OAuth ID, pero esta vez, en la ruta de authorized URI ponemos la direccion de nuestra App en heroku (`heroku open` para verla), y le agregamos los endpoints /auth/google/callback. En la ruta javascript de origen ponemos la direccion de la app en heroku pero pelada, hasta el ".com". Vamos a tener que configurar tambien la apariencia del cartel de autorizacion de google, por lo que aca si conviene dedicarle un tiempito ya que va a ser la version final que va a ver el cliente. Es decir, agregarle un logo, descripcion, email de contacto, etc.
 
-## Credentials usage logic
+## Credentials logic
 
-Ahora que tenemos los dos posibles casos de uso (produccion o dev), nuestro archivo _keys.js_ no va a poseer mas las keys hardcodeadas, sino que va a poseer la logica para devolver las keys necesarias segun el caso en que nos encontremos. La variable que nos va a permitir trabajar con esta logica, es la variable NODE*ENV.
-Entonces nuestro nuevo arbol de archivos *./config* se convierte en:
+Ahora que tenemos los dos posibles casos de uso (produccion o dev), nuestro archivo _keys.js_ no va a poseer mas las keys hardcodeadas, sino que va a poseer la logica para devolver las keys necesarias segun el caso en que nos encontremos. La variable que nos va a permitir trabajar con esta logica, es la variable NODE_ENV.
+Entonces nuestro nuevo arbol de archivos config se convierte en:
 **./config:**
-|--dev.js *(ignore)_
-|--prod.js _(commit)_
-|--keys.js _(commit)\_
 
+|--dev.js _(ignore)_
+|--prod.js _(commit)_
+|--keys.js _(commit)_
 **keys.js** va a contener la logica para exportar las keys correspondientes
 
 ```javascript
@@ -305,3 +305,18 @@ Una solucion a este problema, es agregar la opcion **proxy: true** a nuestra ins
       proxy: true
     },
 ```
+
+## Create React App
+
+Ahora vamos a crear el client side de nuestra app. Si tenemos node > 5.2, entonces podemos crearla directamente con `npx create-react-app client`.
+Sino, instalamos react globalmente con `sudo npm install -g create-react-app`.
+Si ya lo teniamos instalado globalmente con npm, y queremos usar npx, entonces lo mejor es desinstalarlo globalmente con `sudo npm uninstall -g create-react-app` y despues si hacer `npx create-react-app client`.
+Dentro de la carpeta client, corremos `npm start` o `yarn start` y ya tenemos el servidor local de desarrollo.
+
+Como veremos, este server es distinto al server de Express que levantamos para testear el server side de nuestra App.
+
+![](images/why2servers.png)
+
+### ¿Porque usar 2 servidores distintos?
+
+Usamos 2 servidores, uno para el front end y otro para el backend, simplemente porque juntar todas las funcionalidades en un solo servidor, no solo seria muy engorroso, sino que nos privaria de todas las funcionalidades con las que viene Create React App, que son demasiado utiles y necesarias como para dejarlas de lado.
