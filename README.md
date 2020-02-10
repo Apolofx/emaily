@@ -334,4 +334,42 @@ Abrimos el _pacakge.json_ **del server**, y vamos a la parte de scripts.
   }
 ```
 
-Aca lo que hicimos es agregar el script de ejecucion del _client server_ con un prefix que le indica que lo tiene que ejecutar en el contexto de la carpeta client. Y agregamos un nuevo script _dev_ que nos inicia los dos servers en simultaneo usando el paquete de npm _concurrently_ para correr 2 comandos a la vez. Las backslashes las usamos como caracteres de escape, ya que la doble comilla sola nos terminaria el script de esa linea.
+Aca lo que hicimos es agregar el script de ejecucion del _client server_ con un prefix que le indica que lo tiene que ejecutar en el contexto de la carpeta client. Y agregamos un nuevo script _dev_ que nos inicia los dos servers en simultaneo usando el paquete de npm _concurrently_ para correr 2 comandos a la vez. Las backslashes las usamos como caracteres de escape, ya que la doble comilla sola nos terminaria el script de esa linea. Entonces si ahora corremos el comando `npm run dev` dentro de _server_, se nos levantan los servidores locales, el clientside en el puerto 3000 y el serverside en el 5000.
+
+### Interaccion entre React y Node/Express
+
+Como primera prueba, podemos insertar un link de Ingresar Con Google, en nuestra pagina principal de prueba de React App.
+
+```html
+<a href="/auth/google">Sign In With Google</a>
+```
+
+Aca nos encontramos con un pequeño problema, que no es tan pequeño. Como le pasamos una ruta relativa, React va a entender que queremos ir a http://localhost:3000/auth/google. Nada mas lejano de la realidad que eso querido React. ¿Como lo resolvemos?
+En principio es logico pensar que podemos indicarle la ruta completa de esta manera:
+
+```javascript
+<a href='http://localhost:5000/auth/google'>Sign In With Google</a>
+```
+
+¿Pero que pasa cuando estemos en produccion y la URL no sea localhost?. Es por eso que queremos imperiosamente no tener que especificar ni una mierda y escribir solo la ruta relativa. Para esto, vamos a usar un fix, que involucra crear un Proxy.
+
+### Dirty Little Fix
+
+Para versiones de CRA > 2.0+, vamos a usar el siguiente fix.
+
+1. En el directorio **client/** instalar el siguiente paquete:
+   `npm install http-proxy-middleware --save`.
+2. En **client/src**, crear un archivo de nombre _setupProxy.js_.
+
+3) Agregar los proxies a ese archivo
+
+```javascript
+const proxy = require("http-proxy-middleware");
+
+module.exports = function(app) {
+  app.use(proxy(["/api", "/auth/google"], { target: "http://localhost:5000" }));
+};
+```
+
+4. Reiniciar los servidores desde la consola.
+5. Nos va a aparecer el error de 'redirect_uri_mismatch' que ya sabemos como resolver.
