@@ -320,3 +320,18 @@ Como veremos, este server es distinto al server de Express que levantamos para t
 ### ¿Porque usar 2 servidores distintos?
 
 Usamos 2 servidores, uno para el front end y otro para el backend, simplemente porque juntar todas las funcionalidades en un solo servidor, no solo seria muy engorroso, sino que nos privaria de todas las funcionalidades con las que viene Create React App, que son demasiado utiles y necesarias como para dejarlas de lado.
+
+### Como usar los dos servers, frontend y backend
+
+Abrimos el _pacakge.json_ **del server**, y vamos a la parte de scripts.
+
+```json
+"scripts": {
+    "start": "node index.js",
+    "server": "nodemon index.js", //esta linea antes se llamaba dev
+    "client": "npm run start --prefix client", //agregamos esta linea
+    "dev": "concurrently \"npm run server\" \"npm run client\"" //agregamos esta linea
+  }
+```
+
+Aca lo que hicimos es agrega le script de ejecucion del _client server_ con un prefix que le indica que lo tiene que ejecutar en el contexto de la carpeta client. Y agregamos un nuevo script _dev_ que nos inicia los dos servers en simultaneo usando el paquete de npm _concurrently_ para correr 2 comandos a la vez. Las backslashes las usamos como caracteres de escape, ya que la doble comilla sola nos terminaria el script de esa linea.
