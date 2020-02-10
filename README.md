@@ -308,7 +308,7 @@ Una solucion a este problema, es agregar la opcion **proxy: true** a nuestra ins
 
 ## Create React App
 
-Ahora vamos a crear el client side de nuestra app. Si tenemos node > 5.2, entonces podemos crearla directamente con `npx create-react-app client`.
+Ahora vamos a crear el client side de nuestra app. Si tenemos npm > 5.2+, entonces podemos crearla directamente con `npx create-react-app client`.
 Sino, instalamos react globalmente con `sudo npm install -g create-react-app`.
 Si ya lo teniamos instalado globalmente con npm, y queremos usar npx, entonces lo mejor es desinstalarlo globalmente con `sudo npm uninstall -g create-react-app` y despues si hacer `npx create-react-app client`.
 Dentro de la carpeta client, corremos `npm start` o `yarn start` y ya tenemos el servidor local de desarrollo.
@@ -334,4 +334,4 @@ Abrimos el _pacakge.json_ **del server**, y vamos a la parte de scripts.
   }
 ```
 
-Aca lo que hicimos es agrega le script de ejecucion del _client server_ con un prefix que le indica que lo tiene que ejecutar en el contexto de la carpeta client. Y agregamos un nuevo script _dev_ que nos inicia los dos servers en simultaneo usando el paquete de npm _concurrently_ para correr 2 comandos a la vez. Las backslashes las usamos como caracteres de escape, ya que la doble comilla sola nos terminaria el script de esa linea.
+Aca lo que hicimos es agregar el script de ejecucion del _client server_ con un prefix que le indica que lo tiene que ejecutar en el contexto de la carpeta client. Y agregamos un nuevo script _dev_ que nos inicia los dos servers en simultaneo usando el paquete de npm _concurrently_ para correr 2 comandos a la vez. Las backslashes las usamos como caracteres de escape, ya que la doble comilla sola nos terminaria el script de esa linea.
