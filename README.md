@@ -372,4 +372,14 @@ module.exports = function(app) {
 ```
 
 4. Reiniciar los servidores desde la consola.
-5. Nos va a aparecer el error de 'redirect_uri_mismatch' que ya sabemos como resolver.
+5. Cuando ahora apretemos sobre el link de ingresar con google, nos va a aparecer el error de **'redirect_uri_mismatch'** que ya sabemos como resolver.
+
+Entonces, resumiendo, siempre que estemos en el dev-server de Create React App, la ruta relativa va a ser redireccionada por el proxy hacia http://localhost:5000/'ruta-relativa'. Si no estamos en Dev y estamos en produccion, el server de CRA no va a existir mas, por lo cual el server va a ser uno solo (el de Heroku en nuestro caso). Con React vamos a hacer un build, y al server de produccion solo vamos a mandar el build. Por lo cual en produccion solo vamos a tener un unico server, y las rutas relativas van a hacer referencia a ese unico server.
+
+#### La arquitectura de nuestros 2 servidores en dev-mode quedaria asi:
+
+![](images/dev-architecture.png)
+
+#### La arquitectura en produccion quedaria asi:
+
+![](images/prod-architecture.png)
