@@ -374,12 +374,63 @@ module.exports = function(app) {
 4. Reiniciar los servidores desde la consola.
 5. Cuando ahora apretemos sobre el link de ingresar con google, nos va a aparecer el error de **'redirect_uri_mismatch'** que ya sabemos como resolver.
 
-Entonces, resumiendo, siempre que estemos en el dev-server de Create React App, la ruta relativa va a ser redireccionada por el proxy hacia http://localhost:5000/'ruta-relativa'. Si no estamos en Dev y estamos en produccion, el server de CRA no va a existir mas, por lo cual el server va a ser uno solo (el de Heroku en nuestro caso). Con React vamos a hacer un build, y al server de produccion solo vamos a mandar el build. Por lo cual en produccion solo vamos a tener un unico server, y las rutas relativas van a hacer referencia a ese unico server.
+Entonces, resumiendo, siempre que estemos en el dev-server de Create React App, la ruta relativa va a ser redireccionada por el proxy hacia http://localhost:5000/'ruta-relativa'. Si no estamos en Dev y estamos en produccion, el create-react-app no va a existir mas, por lo cual el server va a ser uno solo (el de Heroku en nuestro caso). Con React vamos a hacer un build, y al server de produccion solo vamos a mandar ese build, y toda la API. Por lo cual en produccion solo vamos a tener un unico server, y las rutas relativas van a hacer referencia a ese unico server.
 
-#### La arquitectura de nuestros 2 servidores en dev-mode quedaria asi:
+### La arquitectura de nuestros 2 servidores en dev-mode quedaria asi:
 
 ![](images/dev-architecture.png)
 
-#### La arquitectura en produccion quedaria asi:
+### La arquitectura en produccion quedaria asi:
 
 ![](images/prod-architecture.png)
+
+### Dev OAuth Flow
+
+![](images/dev-oauth-flow.png)
+
+### Prod OAuth Flow
+
+![](images/prod-oauth-flow.png)
+
+## Client Side
+
+Aca vamos a configurar todo lo respectivo a React.
+En _client/src_ eliminamos todos los archivos boilerplate que tenemos. Y solo dejamos **serviceWorkers.js**, **setupProxy.js** y **setupTests.js**.
+
+Inicialmente vamos a tener 2 archivos base:
+
+- **index.js**: Data layer control (Redux)
+- **App.js**: Render layer control (React Router)
+
+![](images/index-app.png)
+
+Antes que nada vamos a ir a la carpeta **client** e instalar las librerias necesarias.
+
+1. `cd client` ---> `npm install --save redux react-redux react-router-dom`
+
+2. En _client/src_ creamos el archivo index.js. Este archivo va a renderizar el componente root, que en nuestro caso es App.js.
+
+```javascript
+import React from "react";
+import ReactDOM from "react-dom";
+
+import App from "./components/App";
+
+ReactDOM.render(<App />, document.querySelector("#root"));
+```
+
+3. y ademas vamos a crear una nueva carpeta '_components_' dentro de _client/src_. Dentro de esta carpeta es donde vamos a guardar todos los componentes. Creamos entonces el componente App.js
+
+```javascript
+import React from "react";
+
+const App = () => {
+  return <div>Hi There!</div>;
+};
+
+export default App;
+```
+
+**ATENTION PLIS**:
+Para nombrar los archivos dentro del client side, vamos a adoptar una forma standar. Si el archivo que estamos por nombrar, **exporta un React Component** (ya sea un class component o function based component), el nombre del archivo empieza con mayusculas. Ejemplo: _App.js_.
+Si el archivo que estamos por nombrar **exporta una funcion, o una serie de funciones** lo nombramos todo en minusculas. Ejemplo: _index.js_

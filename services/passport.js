@@ -25,19 +25,15 @@ passport.use(
       callbackURL: "/auth/google/callback",
       proxy: true
     },
-    (accesToken, refreshToken, profile, done) => {
-      User.findOne({ googleId: profile.id }).then(existingUser => {
-        if (existingUser) {
-          done(null, existingUser); //done() le avisa a passport que ya terminamos
-        } else {
-          new User({ googleId: profile.id })
-            .save()
-            .then(user => done(null, user)); //Este new User de aca crea una
-        }
-      });
+    async (accesToken, refreshToken, profile, done) => {
+      const existingUser = await User.findOne({ googleId: profile.id });
 
-      //instancia de la Model Class 'users', cuyo esquema ya fue declarado por
-      //userSchema en User.js
+      if (existingUser) {
+        return done(null, existingUser); //done() le avisa a passport que ya terminamos
+      }
+
+      const user = await new User({ googleId: profile.id }).save();
+      done(null, user);
     }
   )
 );
