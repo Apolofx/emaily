@@ -419,6 +419,10 @@ import App from "./components/App";
 ReactDOM.render(<App />, document.querySelector("#root"));
 ```
 
+_ReactDOM.render(**elemento**, **contenedor[, callback]**)_
+
+_Renderiza un elemento React al DOM en el contenedor suministrado y retorna una referencia al componente (o devuelve null para componentes sin estado)._
+
 3. y ademas vamos a crear una nueva carpeta '_components_' dentro de _client/src_. Dentro de esta carpeta es donde vamos a guardar todos los componentes. Creamos entonces el componente App.js
 
 ```javascript
@@ -434,3 +438,38 @@ export default App;
 **ATENTION PLIS**:
 Para nombrar los archivos dentro del client side, vamos a adoptar una forma standar. Si el archivo que estamos por nombrar, **exporta un React Component** (ya sea un class component o function based component), el nombre del archivo empieza con mayusculas. Ejemplo: _App.js_.
 Si el archivo que estamos por nombrar **exporta una funcion, o una serie de funciones** lo nombramos todo en minusculas. Ejemplo: _index.js_
+
+### React, Redux, React-Redux
+
+La manera en que se hace un seguimiento global de todo el estado de nuestra app, es mediante Redux. Mas especificamente, el state se guarda en el store de Redux. Solo puede haber un unico store.
+El state es un objeto plano de JavaScript y no se debe manipular directamente, solo se debe modificar mediante el despacho de acciones disparadas por eventos en la app.
+Para que cada componente de la App tenga acceso al store, se usa un Provider. El Provider es un componente que funciona como pegamento entre Redux y React.
+La App se renderiza como child del Provider.
+En el _index.js_ creamos el store con `createStore()`.
+_createStore(**reducer**, **[preloadedState]**, **[enhancer]**)_
+
+```javascript
+const store = createStore(() => [], {}, applyMiddleware());
+```
+
+y renderizamos el Provider y la App, asociando el provider al store creado:
+
+```javascript
+import React from "react";
+import ReactDOM from "react-dom";
+import { Provider } from "react-redux";
+import { createStore, applyMiddleware } from "redux";
+
+import App from "./components/App";
+
+const store = createStore(() => [], {}, applyMiddleware());
+
+ReactDOM.render(
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.querySelector("#root")
+);
+```
+
+![](images/redux-schema.png)
