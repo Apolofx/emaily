@@ -446,6 +446,7 @@ El state es un objeto plano de JavaScript y no se debe manipular directamente, s
 Para que cada componente de la App tenga acceso al store, se usa un Provider. El Provider es un componente que funciona como pegamento entre Redux y React.
 La App se renderiza como child del Provider.
 En el _index.js_ creamos el store con `createStore()`.
+
 _createStore(**reducer**, **[preloadedState]**, **[enhancer]**)_
 
 ```javascript
@@ -472,4 +473,85 @@ ReactDOM.render(
 );
 ```
 
+el document.querySelector("#root") busca dentro de _/public/index.html_ el elemento que tenga `id = "root"` y reactDOM renderiza todo a partir de ese nodo.
+
 ![](images/redux-schema.png)
+
+Dentro de _/src_ vamos a crear la carpeta contenedora de los reducers.
+En nuestro caso vamos a tener una estructura con dos reducers. Uno que se va a encargar de anotar si el usuario esta loggeado (_authReducer_), y otro reducer que se va a encargar de anotar la lista con todas las encuestas que el usuario haya creado (_survaysReducer_).
+
+### React Router
+
+React Router va a manejar los componentes que se rendericen segun la URL en la que estemos. Para esto utiliza los componentes `BrowserRouter` y `Route`, ambos pertenecientes al modulo _react-router-dom_.
+React Router lo vamos a utilizar dentro de App.js ya que es donde manejamos toda la capa de renderizado de componentes.
+
+```javascript
+import { BrowserRouter, Route } from "react-router-dom";
+const App = () => {
+  return (
+    <div>
+      <BrowserRouter>
+        <div>
+          <Route exact path='/surveys' component={Dashboard} />
+        </div>
+      </BrowserRouter>
+    </div>
+  );
+};
+```
+
+### React CSS Styling - Materialize CSS
+
+Para el estilo de nuestros componentes, vamos a usar una libreria que se llama **Materialize CSS**. Tenemos dos formas de importarla a nuestro proyecto. Una es mediante CDN agregando la ruta en un link tag en nuestro _index.html_. Pero la que vamos a usar nosotros es mediante NPM.
+Estando dentro de _/client. _
+`npm install materialize-css@next`
+
+#### Configuracion y Utilizacion
+
+La libreria materialize-css la vamos a importar en uno de nuestros archivos js, y Webpack se va a encargar de empaquetar ese archivo para que quede disponible como asset en nuestro bundle final.
+
+**Webpack**: Webpack es un Module Loader. Se usa cuando creamos nuestra app con `create-react-app` para configurar y cargar otros modulos.
+Webpack ademas corre cada vez que hacemos un cambio en nuestra aplicacion, y lo que hace es empaquetar todos los distintos archivos y modulos, en un conjunto de assets que entiende el navegador.
+
+Para utilizar la libreria materialize-css tenemos que importar los archivos .css que se instalaron al instalar la libreria mediante npm. Estos se encuentran en _client/node_modules/materialize-css/dist/css_. Los podemos importar tanto en index.js como en App.js.
+
+Una vez importados, podemos ver como al darle guardar, ya cambia el estilo default de los componentes.
+
+## Axios y Redux-Thunk
+
+Axios nos va a servir para hacer peticiones Ajax a la Express API desde React. Hace lo mismo que fetch, pero tiene una rango de compatibilidad con buscadores mas amplio que fetch. La sintaxis es apenas distinta.
+Redux-Thunk es un middleware que permite la interaccion con el Store de manera asincrona, ya que redux funciona de manera sincrona. Funciona como wrapper de un objeto de accion de redux. Entonces puede ser usado para retrasar el envio de una accion hasta que se cumpla una linea de codigo asincrona. Actua interviniendo con la Dispatch Function (que es la encargada de despachar una accion a los reducers para almacenar el nuevo state en el store), que por defecto en Redux no se toca.
+Para mas info https://platzi.com/blog/como-funciona-redux-thunk/
+
+Instalamos ambos en /client: `npm install --save axios redux-thunk`
+
+En _/client/src/index.js_ importamos redux thunk y lo pasamos como parametro al argumento _applyMiddleware()_ en el objeto **store**
+
+## Action Creator
+
+Ahora vamos a crear un action creator, que va a ser la funcion encargada de procesar los cambios de estados derivados de un evento en la app, y mandarlo como Action Object a los reducers para que envien el nuevo app state al store.
+
+1. Creamos una nueva carpeta **actions**: _/client/src/actions_
+2. Dentro de **actions**, creamos 2 nuevos archivos, _actions.js_ y _types.js_.
+
+### actions.js
+
+```javascript
+import axios from "axios";
+import { FETCH_USER } from "./types";
+
+//action creator
+const fetchUser = () => {
+  return function(dispatch) {
+    axios
+      .get("/api/current_user")
+      .then(res => dispatch({ type: FETCH_USER, payload: res }));
+  };
+};
+```
+
+### types.js
+
+```javascript
+export const FETCH_USER = "fetch_user";
+```
