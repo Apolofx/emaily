@@ -212,7 +212,7 @@ app.get("/api/logout", (req, res) => {
 ## Express Middlewares
 
 Los middleware son pequeñas funciones que pueden ser utilizadas para modificar requests entrantes en nuestra app, antes de ser enviadas a los Route Handlers.
-La **principal** utilidad en nuestro codigo, es la de procesar tareas comunes a todos los route handlers, para no ser repetitivos y redundantes. De esta manera, lo que hacemos es una especia de preprocesamiento de la request.
+La **principal** utilidad en nuestro codigo, es la de procesar tareas comunes a todos los route handlers, para no ser repetitivos y redundantes. De esta manera, lo que hacemos es una especie de preprocesamiento de la request.
 Sin embargo, tambien podemos elegir como conectar estos middlewares, y de esa manera determinar su uso para un subconjunto de routehandlers en vez de usarlo en todos los casos.
 ![](images/middlewares.png)
 
@@ -443,7 +443,8 @@ Si el archivo que estamos por nombrar **exporta una funcion, o una serie de func
 
 La manera en que se hace un seguimiento global de todo el estado de nuestra app, es mediante Redux. Mas especificamente, el state se guarda en el store de Redux. Solo puede haber un unico store.
 El state es un objeto plano de JavaScript y no se debe manipular directamente, solo se debe modificar mediante el despacho de acciones disparadas por eventos en la app.
-Para que cada componente de la App tenga acceso al store, se usa un Provider. El Provider es un componente que funciona como pegamento entre Redux y React.
+Para que cada componente de la App tenga acceso al store, se usa un Provider. El **Provider** es un componente que funciona como pegamento entre Redux y React. Tiene una referencia al Store y provee al componente al cual envuelve de la data contenida en el Store.
+Para que cada componente se comunique con el **Provider** se usa **Connect**. Cualquiera sea el componente que _wrapiemos_ con Connect, ese componente va a poder acceder a los cambios en el Store state desde el Provider.
 La App se renderiza como child del Provider.
 En el _index.js_ creamos el store con `createStore()`.
 
@@ -479,26 +480,41 @@ el document.querySelector("#root") busca dentro de _/public/index.html_ el eleme
 
 Dentro de _/src_ vamos a crear la carpeta contenedora de los reducers.
 En nuestro caso vamos a tener una estructura con dos reducers. Uno que se va a encargar de anotar si el usuario esta loggeado (_authReducer_), y otro reducer que se va a encargar de anotar la lista con todas las encuestas que el usuario haya creado (_survaysReducer_).
+Vamos a crear un archivo para cada Reducer, y los vamos a combinar en /reducers/index.js con `combineReducers()`.
+
+### Reducers
+
+Cada reducer es una funcion con 2 parametros, el `previousState` y una `action`, y devuelve el siguiente state.
 
 ### React Router
 
 React Router va a manejar los componentes que se rendericen segun la URL en la que estemos. Para esto utiliza los componentes `BrowserRouter` y `Route`, ambos pertenecientes al modulo _react-router-dom_.
 React Router lo vamos a utilizar dentro de App.js ya que es donde manejamos toda la capa de renderizado de componentes.
+_Para navegar a traves de URL's totalmente distintas, vamos a seguir usando el clasico `href="/blabla/bla"`, por ejemplo como es el caso de los botones Login y Logout, donde tenemos que salirnos del index.html para ir a una direccion completamente distinta como lo es el /auth o la /api._
 
 ```javascript
 import { BrowserRouter, Route } from "react-router-dom";
 const App = () => {
-  return (
-    <div>
-      <BrowserRouter>
-        <div>
-          <Route exact path='/surveys' component={Dashboard} />
-        </div>
-      </BrowserRouter>
-    </div>
-  );
+  render() {
+    return (
+      <div className='container'>
+        <BrowserRouter>
+          <div>
+            <Header />
+            <Route exact path='/' component={Landing} />
+            <Route exact path='/surveys' component={Dashboard} />
+            <Route path='/surveys/new' component={SurveyNew} />
+          </div>
+        </BrowserRouter>
+      </div>
+    );
+  }
 };
 ```
+
+#### React Router <Link>
+
+![](images/link-vs-a.png)
 
 ### React CSS Styling - Materialize CSS
 
@@ -541,11 +557,11 @@ import axios from "axios";
 import { FETCH_USER } from "./types";
 
 //action creator
-const fetchUser = () => {
+export const fetchUser = () => {
   return function(dispatch) {
     axios
       .get("/api/current_user")
-      .then(res => dispatch({ type: FETCH_USER, payload: res }));
+      .then(res => dispatch({ type: FETCH_USER, payload: res.data }));
   };
 };
 ```
@@ -555,3 +571,9 @@ const fetchUser = () => {
 ```javascript
 export const FETCH_USER = "fetch_user";
 ```
+
+## Hooking up Components to Redux
+
+1. Importar el **connect** helper de 'redux-react' dentro del Componente.js.
+2. Definir la funcion `mapStateToProps()`.
+3. Conectar el componente al store modificando la linea export agregandole `connect(mapStateToPropos)(<nombre-del-componente>)`.
