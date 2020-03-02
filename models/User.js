@@ -5,6 +5,7 @@ const { Schema } = mongoose;
 //a una variable del mismo nombre. (ver que es tal cual como se usa en ReactJS)
 const userSchema = new Schema({
   googleId: String
+  // credits: Number
 });
 
 mongoose.model("users", userSchema); //con esta linea, cargamos el esquema que

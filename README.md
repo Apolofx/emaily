@@ -5,6 +5,7 @@ El stack involucra: React, Node, Express y PassportJS.
 React como libreria principal para el desarrollo front end de la App.
 Node como runtime de la app.
 Express como Route Handler. Este recibe las HTTP reqs a traves de Node, y decide en base al contenido de la misma, que ruta de funciones le vamos a devolver como response.
+Ademas se usa Materialize CSS para los estilos, y Stripe para procesamiento de pagos externo.
 
 ## Inicializacion del proyecto:
 
@@ -514,7 +515,9 @@ const App = () => {
 
 #### React Router <Link>
 
+Cuando se trate de un link a una ruta en el mismo documento, vamos a usar el tag <Link> de React Router. Tal es el caso por ejemplo, del Logo de Emaily, en donde al presionarlo queremos que nos redirija a la ruta /surveys, que esta en el mismo documento.
 ![](images/link-vs-a.png)
+![](images/react-router-link.png)
 
 ### React CSS Styling - Materialize CSS
 
@@ -577,3 +580,260 @@ export const FETCH_USER = "fetch_user";
 1. Importar el **connect** helper de 'redux-react' dentro del Componente.js.
 2. Definir la funcion `mapStateToProps()`.
 3. Conectar el componente al store modificando la linea export agregandole `connect(mapStateToPropos)(<nombre-del-componente>)`.
+
+## Payment Process
+
+**Rules of Billing:**
+
+1. Nunca aceptar numeros de tarjetas de creditos enviados directamente a nuestro server.
+2. Nunca vamos a guardar numeros de tarjeta de creditos.
+3. Siempre vamos a usar un procesador de pagos externo.
+
+### Stripe
+
+Vamos a estar usando Stripe para el manejo de pagos mediante tarjetas de credito ya que se encargan de toda la parte de seguridad y manejo de datos sensibles.
+Para esto, lo que vamos a hacer en vez de crear un formulario de pago, es usar una libreria de react que nos provee de un componente CheckOut, en donde los datos ingresados son enviados directamente para que los procese Stripe.
+Esa libreria se llama _react-stripe-checkout_.
+En client, la instalamos `npm install react-stripe-checkout`.
+
+Ahora para acceder a la API de Stripe nos vamos a loggear y vamos a ir a la seccion del dashboard llamada Developers. Ahi vamos a tener datos como la API-version y ademas las API keys.
+
+![](images/stripe-flow.png)
+
+#### API keys
+
+Tenemos que agregar las dos keys a nuestro archivo de configuracion de keys que ya teniamos en **/server/config**.
+Para eso las agregamos en dev.js:
+
+```javascript
+stripePublishableKey: "<aca-pegamos-la-publishable-api-key>",
+  stripeSecretKey: "<aca-pegamos-la-secret-api-key>"
+```
+
+Agregamos las keys a prod.js:
+
+```javascript
+stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+stripeSecretKey: process.env.STRIPE_SECRET_KEY
+```
+
+**RECORDAR de agregar las API-keys a las variables de entorno de Heroku para que esten disponibles en Produccion!!**
+
+### API Keys in server vs API Keys in client
+
+Aca nos encontramos con una dificultad (que mas tarde veremos como lo resolvemos con create-react-app). Dicha dificultad se basa en que en el server-side estamos usando CommonJS mientras que en client-side estamos usando ES6 para importar y exportar, y como no podemos usar `import` dentro de un _if statement_ como si lo podiamos hacer con `require`, entonces para acceder a **./config** utilizando nuestro flujo de control (_dev_ o _prod_) tenemos que usar otro metodo.
+
+Si vamos a la documentacion de `create-react-app` podemos ver que nos permite acceder a variables de entorno definidas por nosotros mismos siempre que comiencen con `REACT_APP_`.
+Ademas nos deja crear dos archivos distintos de variables de entorno, uno para _dev_ (**.env.development**) y otro para _prod_ (**.env.production**).
+Entonces en **/client** creamos dos archivos:
+
+1. `/client/.env.development` >> REACT_APP_STRIPE_KEY = aslkjdhasldhalskdjad
+2. `/client/.env.production` >> REACT_APP_STRIPE_KEY = asdjaslkdhaslkdjhdsal
+
+Ahora desde /client/src/index.js ya podemos acceder a esas variables utilizando `process.env.REACT_APP_STRIPE_KEY`.
+
+//_Se debe reiniciar el dev server una vez creadas las variables de entorno para poder acceder a ellas_//
+
+## Payments Component
+
+Ahora tenemos que hacer que una vez loggeados, se muestre en el Header el boton que va a levantar el formulario de pago de stripe para ser enviado y procesado.
+Este boton es el componente que ya viene creado en la libreria `react-stripe-checkout` que instalamos previamente con npm.
+
+Lo que vamos a hacer es crear un class component llamado Payments.js que va a contener el renderizado del boton de stripe-checkout, para posteriormente importar **Payments.js** dentro de **Header.js**.
+
+### Stripe callback Token
+
+El token va a ser un callback que nos va a devolver _Stripe_ cuando enviemos un formulario de pago si esta todo correcto y el pago es procesado.
+Cada vez que un usuario compra creditos, esto se tiene que ver reflejado no solo en la interfaz de usuario del cliente sino tambien en el Model object de ese usuario. Para esto vamos a tener que agregar un atributo **credits** a nuestro User Model.
+Con el token, nosotros vamos a asegurarnos de que el pago se acredito y podremos actualizar el estado de **credits** de dicho usuario.  
+**Token Action Creator:** Como los creditos van a formar parte del estado de la app, tenemos que generar un nuevo action creator.
+
+```javascript
+export const handleToken = token => async dispatch => {
+  const res = await axios.post("/api/stripe", token);
+
+  dispatch({ type: FETCH_USER, payload: res.data });
+};
+```
+
+Lo que hace este action creator es mandar una post request a _/api/stripe_ pasandole el token como data.
+(Aca no entiendo porque usa el mismo type: FETCH_USER que para el action creator de loggin)
+
+Entonces para que nuestra _action_ sea despachada cuando obtengamos el token, lo que vamos a hacer es llamar al _action creator_ que acabamos de crear, dentro del atributo token del componente _StripeCheckout_
+
+```javascript
+class Payments extends Component {
+  render() {
+    return (
+      <StripeCheckout
+        name='Emaily'
+        description='$5 for 5 email credits'
+        amount={500}
+        token={token => this.props.handleToken(token)}
+        stripeKey={process.env.REACT_APP_STRIPE_KEY}
+      >
+        <button className='btn light-blue'>Add credits</button>
+      </StripeCheckout>
+    );
+  }
+}
+```
+
+### Stripe server-side
+
+Despues de recibir el token de stripe, tenemos la llamada a la action creator que requiere un post a una nueva ruta de nuestra API: _/api/stripe_.
+Para esto tenemos que crear el Route Handler que se encargue de recibir esa request, y ejecutar una accion en base a su contenido.
+Creamos un nuevo route handler: _/server/routes/billingRoutes.js_ y usamos el mismo boilerplate que usamos con authRoutes:
+
+```javascript
+modules.export = app => {
+  app.post("/api/stripe", (req, res) => {});
+};
+```
+
+Ademas tenemos que importar el route handler en nuestro /server/index.js para que pueda ser procesado por Express.js. Debajo del `require("./routes/authRoutes")(app);` escribimos:
+
+```javascript
+require("./routes/billingRoutes")(app);
+```
+
+Recordemos que al usar ese formato en JS lo que estamos haciendo es llamando a la funcion que nos devuelve la ruta en el primer parentesis del `require()` y en el segundo parentesis pasandole como parametro a dicha funcion la variable `app`, que en nuestro index.js equivale a la instancia creada de `express()`.
+
+### Stripe API wrapper npm:
+
+Tenemos que instalar la API de Stripe para que nuestro backend se comunique con Stripe.
+
+`npm install --save stripe`
+
+### Express body-parser
+
+Por defecto Express tiene un problema y es que al recibir una request, no parsea el contenido del body de dicha request. En nuestro caso es un problema porque en el body de la request tenemos el token. Para esto tenemos que instalar un paquete de npm llamado body-parser. Este es un MiddleWare que parsea el body antes de que los handlers tomen la request. Se accede al contenido del body mediante `req.body`.
+
+`npm install --save body-parser`
+
+### Stripe API Create Charge:
+
+Para registrar en el backend el evento de que un pago ha sido efectuado, la API de stripe nos ofrece el metodo _Create Charge_. Este es el metodo que vamos a consumir cuando accedamos a nuestro handler _/api/stripe_.
+En la documentacion de la API, tenemos una seccion dedicada a como crear el _Charge Object_:
+
+```javascript
+var stripe = require("stripe")("sk_test_pOnL8Dp1GmNWc9utWckKskYA00TKQfRTDC");
+
+stripe.charges.create(
+  {
+    amount: 2000,
+    currency: "usd",
+    source: "tok_visa",
+    description: "My First Test Charge (created for API docs)"
+  },
+  function(err, charge) {
+    // asynchronously called
+  }
+);
+```
+
+En nuestro caso, la secret key la importamos desde config.keys.stripeSecretKey. El source va a ser el token que genero stripe en la transaccion y al que accedemos usando el body-parser con req.body.id.
+Como cada metodo de la API de Stripe devuelve una Promesa de JS, vamos a usar Async/Await. Entonces nuestro caso quedaria asi:
+
+```javascript
+const keys = require("../config/keys");
+const stripe = require("stripe")(keys.stripeSecretKey);
+
+module.exports = app => {
+  app.post("/api/stripe", async (req, res) => {
+    const charge = await stripe.charges.create({
+      amount: 500,
+      currency: "usd",
+      description: "$5 for 5 credits",
+      source: req.body.id
+    });
+    console.log(charge);
+  });
+};
+```
+
+Si ahora vamos a la consola, vamos a ver que nos loggeo todo el objecto Charge:
+
+```json
+{
+  "id": "ch_1GIEbBFxR4grfntTXfJASqHA",
+  "object": "charge",
+  "amount": 2000,
+  "amount_refunded": 0,
+  "application": null,
+  "application_fee": null,
+  "application_fee_amount": null,
+  "balance_transaction": "txn_1GIEbB2eZvKYlo2CFAoVeUku",
+  "billing_details": {
+    "address": {
+      "city": null,
+      "country": null,
+      "line1": null,
+      "line2": null,
+      "postal_code": null,
+      "state": null
+    },
+    "email": null,
+    "name": "asdasda@asdas.com",
+    "phone": null
+  },
+  "captured": false,
+  "created": 1583156781,
+  "currency": "usd",
+  "customer": null,
+  "description": "My First Test Charge (created for API docs)",
+  "disputed": false,
+  "failure_code": null,
+  "failure_message": null,
+  "fraud_details": {},
+  "invoice": null,
+  "livemode": false,
+  "metadata": {},
+  "on_behalf_of": null,
+  "order": null,
+  "outcome": null,
+  "paid": true,
+  "payment_intent": null,
+  "payment_method": "card_1GIEYbFxR4grfntTEpzBXWun",
+  "payment_method_details": {
+    "card": {
+      "brand": "visa",
+      "checks": {
+        "address_line1_check": null,
+        "address_postal_code_check": null,
+        "cvc_check": "pass"
+      },
+      "country": "US",
+      "exp_month": 10,
+      "exp_year": 2020,
+      "fingerprint": "dG8L4Gj49IxFr1hM",
+      "funding": "credit",
+      "installments": null,
+      "last4": "4242",
+      "network": "visa",
+      "three_d_secure": null,
+      "wallet": null
+    },
+    "type": "card"
+  },
+  "receipt_email": null,
+  "receipt_number": null,
+  "receipt_url": "https://pay.stripe.com/receipts/acct_1GDspzFxR4grfntT/ch_1GIEbBFxR4grfntTXfJASqHA/rcpt_GpuQxeEgxtC0IIBXUrD2bMErk9yEnfe",
+  "refunded": false,
+  "refunds": {
+    "object": "list",
+    "data": [],
+    "has_more": false,
+    "url": "/v1/charges/ch_1GIEbBFxR4grfntTXfJASqHA/refunds"
+  },
+  "review": null,
+  "shipping": null,
+  "source_transfer": null,
+  "statement_descriptor": null,
+  "statement_descriptor_suffix": null,
+  "status": "succeeded",
+  "transfer_data": null,
+  "transfer_group": null,
+  "source": "tok_visa"
+}
+```
