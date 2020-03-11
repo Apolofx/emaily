@@ -5,13 +5,16 @@ const mongoose = require("mongoose");
 
 const User = mongoose.model("users");
 
+/*serializeUser determines which data of the user object 
+should be stored in the session.*/
 passport.serializeUser((user, done) => {
   done(null, user.id); //aca le pasamos el _id en una cookie
 });
 
+/*deserializeUser nos entrega el id
+que vino en la cookie que nos envio el browser del cliente en la request, y 
+lo agrega al objeto request como req.user*/
 passport.deserializeUser((id, done) => {
-  //deserializeUser nos entrega el id
-  // que vino en la cookie que nos envio el browser del cliente en la request.
   User.findById(id).then(user => {
     done(null, user);
   });

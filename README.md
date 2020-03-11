@@ -201,7 +201,7 @@ app.get("/api/current_user", (req, res) => {
 ```
 
 PassportJS automaticamente carga la propiedad user en el objeto req (**req.user**). Es por eso que podemos acceder a el cuando el usuario hace una peticion.
-Ademas, Passport acopla funciones al objeto req, que podemos usar para maniuplar el user authentication status. Uno que nos importa es req.logout(). Y podemos agregar otro endpoint a nuestra api utilizando el metodo logout().
+Ademas, Passport acopla funciones al objeto req, que podemos usar para manipular el user authentication status. Uno que nos importa es req.logout(). Y podemos agregar otro endpoint a nuestra api utilizando el metodo logout().
 
 ```javascript
 app.get("/api/logout", (req, res) => {
@@ -645,6 +645,17 @@ Lo que vamos a hacer es crear un class component llamado Payments.js que va a co
 
 El token va a ser un callback que nos va a devolver _Stripe_ cuando enviemos un formulario de pago si esta todo correcto y el pago es procesado.
 Cada vez que un usuario compra creditos, esto se tiene que ver reflejado no solo en la interfaz de usuario del cliente sino tambien en el Model object de ese usuario. Para esto vamos a tener que agregar un atributo **credits** a nuestro User Model.
+En **User.js**:
+
+```javascript
+const userSchema = new Schema({
+  googleId: String,
+  credits: { type: Number, default: 0 }
+});
+```
+
+_ver que `credits: { type: Number, default: 0 }` es un atributo cuyo valor es un objeto de atributos **type** y **default**. Estos atributos los podemos ver en mejor detalle en la documentacion de Mongoose_.
+
 Con el token, nosotros vamos a asegurarnos de que el pago se acredito y podremos actualizar el estado de **credits** de dicho usuario.  
 **Token Action Creator:** Como los creditos van a formar parte del estado de la app, tenemos que generar un nuevo action creator.
 
@@ -837,3 +848,59 @@ Si ahora vamos a la consola, vamos a ver que nos loggeo todo el objecto Charge:
   "source": "tok_visa"
 }
 ```
+
+### Actualizar los creditos del usuario
+
+Esto equivale a hacer una actualizacion de la coleccion users de la base de datos.
+Como forma parte del proceso de billing, lo vamos a hacer en la logica contenida en **billingRoutes.js**:
+
+```javascript
+module.exports = app => {
+  app.post("/api/stripe", async (req, res) => {
+    const charge = await stripe.charges.create({
+      amount: 500,
+      currency: "usd",
+      description: "$5 for 5 credits",
+      source:
+        req.body.id /*esto lo obtenemos gracias al paquete npm body-parser*/
+    });
+
+    req.user.credits += 5;
+    /*Recordar que passport incluye la propiedad user en el objeto
+    request cuando se le pasa el _id dentro de la cookie con passport.serializeUser*/
+    const user = await req.user.save();
+    res.send(user);
+  });
+};
+```
+
+Aca podemos ver que accedemos a la propiedad _credits_ mediante `req.user.credits` y una vez modificado el valor de dicha propiedad, lo tenemos que guardar en la base de datos con el metodos `save()` de _mongoose_.
+Como nosotros ademas queremos actualizar lo que ve el usuario, tenemos que mandar el estado actual en la response. Para eso es que usamos el metodo de Express `res.send(user)`.
+
+Notar tambien que usamos _await_ para guardar el nuevo valor, ya que esto es una comunicacion entre nuestro backend (Heroku server) y la base de datos (MongoDB Atlas), que no esta alojada en el mismo servidor, por lo cual es una tarea asincrona y tenemos que esperar a que se concrete antes de poder usar dicha informacion. Si solo pusieramos `req.user.save()` e inmediatamente enviaramos `res.send(user)`, probablemente estariamos enviando una instancia desactualizada de _user_, por no haberle dado el tiempo suficiente al servidor de comunicarse con MongoDB.
+
+## Express middleware
+
+_Tomado de la doc oficial de Express.js_
+
+### Utilización del middleware
+
+Express es una infraestructura web de direccionamiento y middleware que tiene una funcionalidad mínima propia: una aplicación Express es fundamentalmente una serie de llamadas a funciones de middleware.
+
+Las funciones de middleware son funciones que tienen acceso al objeto de solicitud (req), al objeto de respuesta (res) y a la siguiente función de middleware en el ciclo de solicitud/respuestas de la aplicación. La siguiente función de middleware se denota normalmente con una variable denominada next.
+
+### Las funciones de middleware pueden realizar las siguientes tareas:
+
+- Ejecutar cualquier código.
+- Realizar cambios en la solicitud y los objetos de respuesta.
+- Finalizar el ciclo de solicitud/respuestas.
+- Invocar la siguiente función de middleware en la pila.
+- Si la función de middleware actual no finaliza el ciclo de solicitud/- respuestas, debe invocar next() para pasar el control a la siguiente función de middleware. De lo contrario, la solicitud quedará colgada.
+
+### Route Handlers
+
+Podemos proporcionar varios callbacks que se comporten como middleware para manejar una solicitud. La única excepción es que estos callbacks pueden invocar next('route') para omitir el resto de los callbacks. Podemos utilizar este mecanismo para imponer condiciones previas en una ruta y, a continuación, pasar el control a las rutas posteriores si no hay motivo para continuar con la ruta actual.
+
+Un route handler puede tener la forma de una funcion, un array de funciones, o la combinacion de ambas.
+
+**En nuestro caso**, podemos ver un ejemplo de un route handler con varios middlewares en _billingRoutes.js_, donde tenemos 2 callbacks a modo de middlewares. Dentro de un route handler se puede tener la cantidad de middlewares que se quiera, pasandolos como argumento luego de declarar la ruta. La unica condicion es que eventualmente alguno de esos middlewares procese la request y mande una respuesta al destinatario que origino la request.
