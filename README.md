@@ -49,7 +49,7 @@ const PORT = process.env.PORT;
 ```
 
 - Specify Node Enviroment: Vamos a decir a Heroku que use una version especifica de Node. Esto lo hacemos en package.json
-- Specify start script: tenemos que decir a Heroku que comando correr para arrancar nuestro server. Esto tambien se lo comunicamos a Heroku en el package.json, y obviamente le vamos a decir que use nuestro index.js con el comando node para arrancar el puto server. "start": "node index.js"
+- Specify start script: tenemos que decir a Heroku que comando correr para arrancar nuestro server. Esto tambien se lo comunicamos a Heroku en el package.json, y obviamente le vamos a decir que use nuestro index.js con el comando node para arrancar el fucking server. "start": "node index.js"
 - Create .gitignore file: tenemos que crear el gitignore para que no commitiemos ninguna dependencia que hayamos instalado. Asique dentro del .gitignore vamos a agregar node_modules
 
 ### FIRST Deploy:
@@ -57,16 +57,16 @@ const PORT = process.env.PORT;
 - Hacernos cuenta en Heroku
 - Inicializar repo local en la carpeta del proyecto con git init
 - instalar CLI de Heroku
-- Dentro de la carpeta de desarrollo, ejecutamos el comando 'heroku login'
-- Despues de logearnos, le tiramos un 'heroku create' para crear la app heroku
+- Dentro de la carpeta de desarrollo, ejecutamos el comando `heroku login`
+- Despues de logearnos, le tiramos un `heroku create` para crear la app heroku
 - Vamos a ver que nos tira 2 links. El primero es el que vamos a usar si queremos usar nuestra app desde el browser. El segundo es nuestro 'Deployment Target'. Es el repositorio a donde vamos a pushear nuestro local repo.
-- Entonces hacemos un git remote add heroku 'ruta de repo heroku que nos tiro el comando anterior'
+- Entonces hacemos un `git remote add heroku <ruta-de-repo-heroku-que-nos-tiro-el-comando-anterior>`
 
 ### SUBSEQUENT Deploys:
 
 - Guardamos los cambios
-- git add . --> git commit
-- Deployamos la app con Git--> git push heroku master
+- `git add . && git commit`
+- Deployamos la app con Git--> `git push heroku master`
 - Y una vez que pushea completo, podemos actualizar la pagina y nuestra app se vera con los nuevos cambios
 
 ![](images/deploy.jpg)
@@ -349,7 +349,7 @@ Aca nos encontramos con un pequeño problema, que no es tan pequeño. Como le pa
 En principio es logico pensar que podemos indicarle la ruta completa de esta manera:
 
 ```javascript
-<a href='http://localhost:5000/auth/google'>Sign In With Google</a>
+<a href="http://localhost:5000/auth/google">Sign In With Google</a>
 ```
 
 ¿Pero que pasa cuando estemos en produccion y la URL no sea localhost?. Es por eso que queremos imperiosamente no tener que especificar ni una mierda y escribir solo la ruta relativa. Para esto, vamos a usar un fix, que involucra crear un Proxy.
@@ -677,13 +677,13 @@ class Payments extends Component {
   render() {
     return (
       <StripeCheckout
-        name='Emaily'
-        description='$5 for 5 email credits'
+        name="Emaily"
+        description="$5 for 5 email credits"
         amount={500}
         token={token => this.props.handleToken(token)}
         stripeKey={process.env.REACT_APP_STRIPE_KEY}
       >
-        <button className='btn light-blue'>Add credits</button>
+        <button className="btn light-blue">Add credits</button>
       </StripeCheckout>
     );
   }
@@ -904,3 +904,18 @@ Podemos proporcionar varios callbacks que se comporten como middleware para mane
 Un route handler puede tener la forma de una funcion, un array de funciones, o la combinacion de ambas.
 
 **En nuestro caso**, podemos ver un ejemplo de un route handler con varios middlewares en _billingRoutes.js_, donde tenemos 2 callbacks a modo de middlewares. Dentro de un route handler se puede tener la cantidad de middlewares que se quiera, pasandolos como argumento luego de declarar la ruta. La unica condicion es que eventualmente alguno de esos middlewares procese la request y mande una respuesta al destinatario que origino la request.
+
+## Deploying Serverside && Clientside to Heroku
+
+### Problema
+
+Recordemos que en Development teniamos un client server dedicado a "servir" todos los archivos relacionados con el Client side, que nos lo proporcionaba create-react-app.
+En produccion, no vamos a tener un server de create-react-app corriendo en paralelo. Vamos a tener un bundle.js contenido en algun directorio o 'public assets' que el server de produccion va a devolver al cliente cada vez que lo requiera.
+
+Tenemos entonces que hacer que nuestro Node/Express API Server sepa como distinguir si esta en Prod o Dev, para asi decidir si tiene que ir a buscar los Public Assets, o dejar que los maneje create-react-app.
+
+El problema principal que se nos presenta es el manejo de rutas que en Dev las manejaba React Router dentro del client server generado por create-react-app. En Dev, Express nunca se tuvo que hacer cargo de eso, ya que solo se encargaba de manejar los procesos de autenticacion, y API's. Pero el trabajo de decidir que presentar en pantalla ante el usuario lo hacia siempre React con React Router utilizando el servidor corriendo en el puerto 3000.
+
+### Solucion
+
+Lo que hacemos entonces en Produccion, es decirle a Express que cada vez que le llegue una solicitud a una ruta que no comprende (ejemplo: /surveys), entonces que nos devuelva el index.html. Esto va a hacer que cuando se cargue el index.html (generado por nuestro `npm run build`) en nuestro browser, index.html solicite al server ademas los archivos necesarios para cargar la logica de React. Entonces tambien le aclaramos a Express que cuando el cliente solicite `/client/build/static/js/main.js`, le devuelva _main.js_. Y de esta manera, ahora **React Router** tiene todo lo necesario para determinar que dada la ruta /surveys solicitada por el cliente, tiene que presentar el componente **{ Dashoard }** en pantalla.
