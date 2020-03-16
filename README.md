@@ -910,7 +910,7 @@ Un route handler puede tener la forma de una funcion, un array de funciones, o l
 ### Problema
 
 Recordemos que en Development teniamos un client server dedicado a "servir" todos los archivos relacionados con el Client side, que nos lo proporcionaba create-react-app.
-En produccion, no vamos a tener un server de create-react-app corriendo en paralelo. Vamos a tener un bundle.js contenido en algun directorio o 'public assets' que el server de produccion va a devolver al cliente cada vez que lo requiera.
+En produccion, no vamos a tener un server de create-react-app corriendo en paralelo. Vamos a tener un bundle contenido en algun directorio o 'public assets' que el server de produccion va a devolver al cliente cada vez que lo requiera.
 
 Tenemos entonces que hacer que nuestro Node/Express API Server sepa como distinguir si esta en Prod o Dev, para asi decidir si tiene que ir a buscar los Public Assets, o dejar que los maneje create-react-app.
 
@@ -919,3 +919,23 @@ El problema principal que se nos presenta es el manejo de rutas que en Dev las m
 ### Solucion
 
 Lo que hacemos entonces en Produccion, es decirle a Express que cada vez que le llegue una solicitud a una ruta que no comprende (ejemplo: /surveys), entonces que nos devuelva el index.html. Esto va a hacer que cuando se cargue el index.html (generado por nuestro `npm run build`) en nuestro browser, index.html solicite al server ademas los archivos necesarios para cargar la logica de React. Entonces tambien le aclaramos a Express que cuando el cliente solicite `/client/build/static/js/main.js`, le devuelva _main.js_. Y de esta manera, ahora **React Router** tiene todo lo necesario para determinar que dada la ruta /surveys solicitada por el cliente, tiene que presentar el componente **{ Dashoard }** en pantalla.
+
+Entonces, en el `./server/index.js`, debajo de los express Routers previamente configurados escribimos lo siguiente:
+
+```javascript
+if (process.env.NODE_ENV === "production") {
+  //Express will serve up production assets
+  //like our main.js file, or main.css file!
+  app.use(express.static("client/public"));
+  //Express will serve up the index.html file
+  //if it doesn't recognize the route
+  const path = require("path");
+  app.get("*", (req, res) => {
+    req.sendFile(path.resolve(__dirname, "client", "build", "index.html"));
+  });
+}
+```
+
+De esta manera, primero chequeamos si en verdad estamos corriendo la app en produccion (Heroku). Si ese es el caso, entonces ponemos a disponibilidad todos los archivos que estan en la ruta `./client/public` montando el _express.static_ middleware con `app.use(express.static("client/public"));`
+Ahora nos encargamos de rutear cualquier request que venga con un path no reconocido **('\*')**, de manera que devuelva el `index.html`.
+Esto lo hacemos usando el modulo _path_ de Node.js que nos da herramientas para trabajar con rutas de archivos y directorios, y con el metodo _sendFile_ de _express()_ que nos permite enviar el archivo que le pasamos como parametro al metodo.

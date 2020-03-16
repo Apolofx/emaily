@@ -24,6 +24,19 @@ app.use(passport.session());
 
 require("./routes/authRoutes")(app);
 require("./routes/billingRoutes")(app);
+
+if (process.env.NODE_ENV === "production") {
+  //Express will serve up production assets
+  //like our main.js file, or main.css file!
+  app.use(express.static("client/public"));
+  //Express will serve up the index.html file
+  //if it doesn't recognize the route
+  const path = require("path");
+  app.get("*", (req, res) => {
+    req.sendFile(path.resolve(__dirname, "client", "build", "index.html"));
+  });
+}
+
 const PORT = process.env.PORT || 5000;
 /*Esta linea, toma el numero del puerto que nos paso Heroku como
 variable de entorno al iniciar la ejecucion de la app. Esta variable de
