@@ -436,7 +436,7 @@ const App = () => {
 export default App;
 ```
 
-**ATENTION PLIS**:
+**ATENSHION PLIS**:
 Para nombrar los archivos dentro del client side, vamos a adoptar una forma standar. Si el archivo que estamos por nombrar, **exporta un React Component** (ya sea un class component o function based component), el nombre del archivo empieza con mayusculas. Ejemplo: _App.js_.
 Si el archivo que estamos por nombrar **exporta una funcion, o una serie de funciones** lo nombramos todo en minusculas. Ejemplo: _index.js_
 
@@ -513,7 +513,7 @@ const App = () => {
 };
 ```
 
-#### React Router <Link>
+### React Router _\<Link>_
 
 Cuando se trate de un link a una ruta en el mismo documento, vamos a usar el tag <Link> de React Router. Tal es el caso por ejemplo, del Logo de Emaily, en donde al presionarlo queremos que nos redirija a la ruta /surveys, que esta en el mismo documento.
 ![](images/link-vs-a.png)
@@ -525,7 +525,7 @@ Para el estilo de nuestros componentes, vamos a usar una libreria que se llama *
 Estando dentro de _/client. _
 `npm install materialize-css@next`
 
-#### Configuracion y Utilizacion
+### Configuracion y Utilizacion
 
 La libreria materialize-css la vamos a importar en uno de nuestros archivos js, y Webpack se va a encargar de empaquetar ese archivo para que quede disponible como asset en nuestro bundle final.
 
@@ -581,15 +581,16 @@ export const FETCH_USER = "fetch_user";
 2. Definir la funcion `mapStateToProps()`.
 3. Conectar el componente al store modificando la linea export agregandole `connect(mapStateToPropos)(<nombre-del-componente>)`.
 
-## Payment Process
+# Payment Process
 
-**Rules of Billing:**
+## _Rules of Billing:_
 
 1. Nunca aceptar numeros de tarjetas de creditos enviados directamente a nuestro server.
+
 2. Nunca vamos a guardar numeros de tarjeta de creditos.
 3. Siempre vamos a usar un procesador de pagos externo.
 
-### Stripe
+## Stripe
 
 Vamos a estar usando Stripe para el manejo de pagos mediante tarjetas de credito ya que se encargan de toda la parte de seguridad y manejo de datos sensibles.
 Para esto, lo que vamos a hacer en vez de crear un formulario de pago, es usar una libreria de react que nos provee de un componente CheckOut, en donde los datos ingresados son enviados directamente para que los procese Stripe.
@@ -879,7 +880,7 @@ Como nosotros ademas queremos actualizar lo que ve el usuario, tenemos que manda
 
 Notar tambien que usamos _await_ para guardar el nuevo valor, ya que esto es una comunicacion entre nuestro backend (Heroku server) y la base de datos (MongoDB Atlas), que no esta alojada en el mismo servidor, por lo cual es una tarea asincrona y tenemos que esperar a que se concrete antes de poder usar dicha informacion. Si solo pusieramos `req.user.save()` e inmediatamente enviaramos `res.send(user)`, probablemente estariamos enviando una instancia desactualizada de _user_, por no haberle dado el tiempo suficiente al servidor de comunicarse con MongoDB.
 
-## Express middleware
+# Express middleware
 
 _Tomado de la doc oficial de Express.js_
 
@@ -905,7 +906,7 @@ Un route handler puede tener la forma de una funcion, un array de funciones, o l
 
 **En nuestro caso**, podemos ver un ejemplo de un route handler con varios middlewares en _billingRoutes.js_, donde tenemos 2 callbacks a modo de middlewares. Dentro de un route handler se puede tener la cantidad de middlewares que se quiera, pasandolos como argumento luego de declarar la ruta. La unica condicion es que eventualmente alguno de esos middlewares procese la request y mande una respuesta al destinatario que origino la request.
 
-## Deploying Serverside && Clientside to Heroku
+# Deploying Serverside && Clientside to Heroku
 
 ### Problema
 
@@ -939,3 +940,13 @@ if (process.env.NODE_ENV === "production") {
 De esta manera, primero chequeamos si en verdad estamos corriendo la app en produccion (Heroku). Si ese es el caso, entonces ponemos a disponibilidad todos los archivos que estan en la ruta `./client/public` montando el _express.static_ middleware con `app.use(express.static("client/public"));`
 Ahora nos encargamos de rutear cualquier request que venga con un path no reconocido **('\*')**, de manera que devuelva el `index.html`.
 Esto lo hacemos usando el modulo _path_ de Node.js que nos da herramientas para trabajar con rutas de archivos y directorios, y con el metodo _sendFile_ de _express()_ que nos permite enviar el archivo que le pasamos como parametro al metodo.
+
+## Deployment Options
+
+![](images/deploy-options.png)
+
+De estas opciones, la #1 se considera muy poco segura ya que nunca deberiamos comitear un build. La #2, es segura pero deja instaladas muchas dependencias en el server de produccion que solo son necesarias para dev.
+La #3 es la que mas se suele encontrar en el work-flow de empresas y start-ups tecnologicas, aunque requiere de la preparacion de un servidor de Integracion Continua.
+Por cuestiones de practicidad y complejidad, para este proyecto vamos a ir por la opcion #2, ya que el solo hecho de incorporar un servidor de Integracion Continua es material para un proyecto paralelo.
+
+## [Heroku Build Steps (Docs)](https://devcenter.heroku.com/articles/nodejs-support#build-behavior)
