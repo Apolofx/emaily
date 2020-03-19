@@ -345,8 +345,9 @@ Como primera prueba, podemos insertar un link de Ingresar Con Google, en nuestra
 <a href="/auth/google">Sign In With Google</a>
 ```
 
-Aca nos encontramos con un pequeño problema, que no es tan pequeño. Como le pasamos una ruta relativa, React va a entender que queremos ir a http://localhost:3000/auth/google. Nada mas lejano de la realidad que eso querido React. ¿Como lo resolvemos?
-En principio es logico pensar que podemos indicarle la ruta completa de esta manera:
+Aca nos encontramos con un pequeño problema, que no es tan pequeño. Como le pasamos una ruta relativa, React va a entender que queremos ir a http://localhost:3000/auth/google.  
+
+¿Como lo resolvemos? En principio es logico pensar que podemos indicarle la ruta completa de esta manera:
 
 ```javascript
 <a href="http://localhost:5000/auth/google">Sign In With Google</a>
@@ -354,7 +355,7 @@ En principio es logico pensar que podemos indicarle la ruta completa de esta man
 
 ¿Pero que pasa cuando estemos en produccion y la URL no sea localhost?. Es por eso que queremos imperiosamente no tener que especificar ni una mierda y escribir solo la ruta relativa. Para esto, vamos a usar un fix, que involucra crear un Proxy.
 
-### Dirty Little Fix
+### [Proxying API Requests en Dev](https://create-react-app.dev/docs/proxying-api-requests-in-development#configuring-the-proxy-manually)
 
 Para versiones de CRA > 2.0+, vamos a usar el siguiente fix.
 
