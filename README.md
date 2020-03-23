@@ -104,10 +104,12 @@ En la carpeta de services, creamos un archivo que contiene la logica que ejecuta
 MongoDB lo vamos a estar hosteando remotamente con un servicio que se llama MongoDB Atlas, y maneja la configuracion de la database en algun servicio de cloud que seleccionemos. En nuestro caso AWS, pero hay otras opciones como Azure etc. Esta decision es debido a que es mucho mas facil delegar toda esta configuracion de la DB a Atlas que hacerlo por nuestra cuenta de manera Local.
 Con MongoDB podemos tener colecciones de objetos que tienen propiedades totalmente diferente, e incluso distinta cantidad de propiedades. Es una de las principales diferencias con una base de datos relacional clasica como MySQL.
 
-### mongoose.js
+### Mongoose
 
-Mongoose es la libreria que se usa para contectarse con MongoDB.
+Mongoose es un una libreria de Modelado de Objetos de Datos (ODM en ingles) para MongoDB y Node.js. Maneja las relaciones entre datos, provee de una validacion de esquema, y es utilizado para traducir los objetos en codigo a objetos de MongoDB.
+
 _Model Class_: La model class es una manera de instanciar una coleccion de objetos en MongoDB a traves de mongoose.
+
 En nuestra aplicacion, necesitamos crear una coleccion de usuarios para crear una instancia de cada usuario que se Registro en la app la primera vez, de modo que si en algun momento vuelve a loggearse, podamos consulta en la DB si ese usuario ya esta registrado.
 En mongoose tenemos que usar una propiedad llamada Schema, que de alguna manera nos exije que le aclaremos que esquema de propiedades van a tener los objetos que vamos a almacenar en la base de datos. Esto nos saca la libertad que nombramos anteriormente en las caracteristicas principales de MongoDB.
 La model class, o en terminos de MongoDB, la nueva Collection, la instanciamos con:
@@ -345,7 +347,7 @@ Como primera prueba, podemos insertar un link de Ingresar Con Google, en nuestra
 <a href="/auth/google">Sign In With Google</a>
 ```
 
-Aca nos encontramos con un pequeño problema, que no es tan pequeño. Como le pasamos una ruta relativa, React va a entender que queremos ir a http://localhost:3000/auth/google.  
+Aca nos encontramos con un pequeño problema, que no es tan pequeño. Como le pasamos una ruta relativa, React va a entender que queremos ir a http://localhost:3000/auth/google.
 
 ¿Como lo resolvemos? En principio es logico pensar que podemos indicarle la ruta completa de esta manera:
 
@@ -948,6 +950,52 @@ Esto lo hacemos usando el modulo _path_ de Node.js que nos da herramientas para 
 
 De estas opciones, la #1 se considera muy poco segura ya que nunca deberiamos comitear un build. La #2, es segura pero deja instaladas muchas dependencias en el server de produccion que solo son necesarias para dev.
 La #3 es la que mas se suele encontrar en el work-flow de empresas y start-ups tecnologicas, aunque requiere de la preparacion de un servidor de Integracion Continua.
-Por cuestiones de practicidad y complejidad, para este proyecto vamos a ir por la opcion #2, ya que el solo hecho de incorporar un servidor de Integracion Continua es material para un proyecto paralelo.
+Por cuestiones de practicidad y complejidad, para este proyecto vamos a ir por la opcion #2, ya que el solo hecho de incorporar un servidor de Integracion Continua es material para otro proyecto.
 
 ## [Heroku Build Steps (Docs)](https://devcenter.heroku.com/articles/nodejs-support#build-behavior)
+
+## Survey creation
+
+### Overview
+
+![](images/form-flow.png)
+
+Nuestra aplicacion requiere que podamos guardar las surveys creadas, asi como tambien guardar un registro de los encuestados y sus respuestas. Para esto, vamos a tener que usar nuestra base de datos y crear un nuevo modelo.
+Entonces, siguiendo el mismo esquema que usamos para `models/User.js`, vamos a crear un `models/Surveys.js` y lo vamos a importar en nuestro **server/index.js**.
+Cada vez que el Product Owner use nuestra aplicacion para crear un survey y enviarla, a nuestro servidor nos tendria que llegar esta informacion basica de ese evento:
+
+Survey:
+
+- title
+- body
+- subject
+- recipients
+- yes
+- no
+
+Donde _yes_ y _no_ son los campos que llevan el conteo de la encuesta. Ademas, tenemos que considerar el caso en que un encuestado oprima mas de una vez el boton de respuesta de la encuesta. Esto lo podemos arreglar, haciendo que el campo _recipients_ sea un **objeto** que contenga el _email_ del recipient (String), y una variable de estado que podemos llamar _clicked_ (Boolean) que va a indicar si el encuestado ya clickeo o no.
+En Mongoose, estos objectos se llaman **Subdocument Collections**
+
+**IMPORTANTE:** MongoDB solo admite 4Mb por Document. Por eso es que tenemos que tener cuidado al anidar Subdocuments ya que podemos agotar la capacidad de almacenamiento del parent Document bastante rapido.
+
+Nuestro primero Subdocument Collections va a ser `Recipient.js`
+
+```javascript
+const mongoose = require("mongoose");
+const { Schema } = mongoose;
+const recipientSchema = new Schema({
+  email: String,
+  responded: { type: Boolean, default: false }
+});
+
+module.exports = recipientSchema;
+```
+
+**NOTA IMPORTANTE:**
+En el mejor de los casos, cada instancia de usuario en nuestra db tendria que tener su propio Subdocument "Survey". El problema como ya mencionamos, es la memoria. A medida que un user agrega Surveys, cada nueva instancia, va a poder contener menor cantidad de datos, ya que el almacenamiento maximo lo tiene el Document Parent que es nuestra instancia de User, y es 4 Mb.
+Entonces vamos a evitar este tipo de estructura anidada, y en vez de ello, relacionar a la User Collection con la Survey Collecion, para que cada _survey_ se relacione con un unico _user_.
+Para eso vamos a agregar una nueva propiedad _\_user_ a nuestro Survey Schema, haciendo uso de un tipo de dato de mongoose para establecer una relacion de many to one:
+
+```javascript
+_user: { type: Schema.Types.ObjectId, ref: 'User'}
+```

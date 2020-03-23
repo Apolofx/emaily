@@ -5,6 +5,7 @@ const passport = require("passport");
 const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
 require("./models/User");
+require("./models/Survey");
 require("./services/passport");
 
 mongoose.connect(keys.mongoURI, { useNewUrlParser: true });
