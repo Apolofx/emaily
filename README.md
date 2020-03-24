@@ -999,3 +999,23 @@ Para eso vamos a agregar una nueva propiedad _\_user_ a nuestro Survey Schema, h
 ```javascript
 _user: { type: Schema.Types.ObjectId, ref: 'User'}
 ```
+
+## Survey-Creation Route Handler
+
+Ahora tenemos que configurar el endpoint `/api/surveys` para procesar la creacion de una nueva survey.
+Para esto tenemos que considerar dos cosas. Primero, que el usuario este Loggeado, ya que cualquier vivito podria tirarle a pegar endpoints en la url y encontrar `api/surveys` sin estar loggeado. Asique aca vamos a hacer uso del middleware `requireLogin` que creamos anteriormente en nuestra carpeta middlewares.
+Ademas, tenemos que asegurarnos de que el usuario posee el minimo de creditos para realizar esa operacion. Aunque en nuestra aplicacion este va a ser el unico proceso en el cual requiramos ese chequeo, podemos considerar una buena practica agregarlo como Middleware, ya que podria ser requerido en futuras nuevas features de la App.
+Entonces, siguiendo una logica parecida a la que usamos en `requireLogin`, creadmos `middlewares/requireCredits.js`:
+
+```javascript
+module.exports = (req, res, next) => {
+  if (req.user.credits < 1) {
+    return res.status(403).send({ error: "Not enough credits." });
+  }
+  next();
+};
+```
+
+### Logica de la API
+
+![](images/survey-routes.png)
