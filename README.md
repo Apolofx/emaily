@@ -973,7 +973,7 @@ Survey:
 - yes
 - no
 
-Donde _yes_ y _no_ son los campos que llevan el conteo de la encuesta. Ademas, tenemos que considerar el caso en que un encuestado oprima mas de una vez el boton de respuesta de la encuesta. Esto lo podemos arreglar, haciendo que el campo _recipients_ sea un **objeto** que contenga el _email_ del recipient (String), y una variable de estado que podemos llamar _clicked_ (Boolean) que va a indicar si el encuestado ya clickeo o no.
+Donde _yes_ y _no_ son los campos que llevan el conteo de la encuesta. Ademas, tenemos que considerar el caso en que un encuestado oprima mas de una vez el boton de respuesta de la encuesta. Esto lo podemos arreglar, haciendo que el campo _recipients_ sea un **objeto** que contenga los _emails_ de los recipients separados por coma (String), y una variable de estado que podemos llamar _clicked_ (Boolean) que va a indicar si el encuestado ya clickeo o no.
 En Mongoose, estos objectos se llaman **Subdocument Collections**
 
 **IMPORTANTE:** MongoDB solo admite 4Mb por Document. Por eso es que tenemos que tener cuidado al anidar Subdocuments ya que podemos agotar la capacidad de almacenamiento del parent Document bastante rapido.
@@ -994,11 +994,13 @@ module.exports = recipientSchema;
 **NOTA IMPORTANTE:**
 En el mejor de los casos, cada instancia de usuario en nuestra db tendria que tener su propio Subdocument "Survey". El problema como ya mencionamos, es la memoria. A medida que un user agrega Surveys, cada nueva instancia, va a poder contener menor cantidad de datos, ya que el almacenamiento maximo lo tiene el Document Parent que es nuestra instancia de User, y es 4 Mb.
 Entonces vamos a evitar este tipo de estructura anidada, y en vez de ello, relacionar a la User Collection con la Survey Collecion, para que cada _survey_ se relacione con un unico _user_.
-Para eso vamos a agregar una nueva propiedad _\_user_ a nuestro Survey Schema, haciendo uso de un tipo de dato de mongoose para establecer una relacion de many to one:
+Para eso vamos a agregar una nueva propiedad _\_user_ a nuestro Survey Schema, haciendo uso de un tipo de dato de mongoose para establecer una **relacion** de many to one:
 
 ```javascript
 _user: { type: Schema.Types.ObjectId, ref: 'User'}
 ```
+
+El guion bajo en _\_user_ indica que se trata de una propiedad relacional.
 
 ## Survey-Creation Route Handler
 
@@ -1019,3 +1021,65 @@ module.exports = (req, res, next) => {
 ### Logica de la API
 
 ![](images/survey-routes.png)
+
+Para la creacion de una nueva survey, vamos a decirle a Express, que al recibir un `POST` al endpoint `/api/surveys`, tome el contenido del _body_ y lo guarde en una nueva instancia del mongoose model **Survey**. Para esto, sabemos que todos los datos que necesitamos van a venir como parte del contenido del _body_ en nuestra request, es decir, en `req.body`.
+Para el campo `recipients`, vamos a tener que parsear el contenido, ya que es una string con datos (emails) separados por coma.
+Ademas, vamos a hacer uso de la sintaxis de ES6 para tener un codigo mas limpio, y usar solo el keyword para las propiedades que tienen el mismo nombre que su valor.
+Es decir, si tenemos:
+
+```javascript
+const mongoose = require("mongoose");
+const requireLogin = require("../middlewares/requireLogin");
+const requireCredits = require("../middlewares/requireCredits");
+
+const Survey = mongoose.model("surveys");
+
+module.exports = app => {
+  app.post("/api/surveys", requireLogin, requireCredits, (req, res) => {
+    const { title, subject, body, recipients } = req.body;
+
+    const survey = new Survey({
+      title,
+      subject,
+      body,
+      recipients: recipients.split(",").map(email => ({ email }))
+    });
+  });
+};
+```
+
+Vemos ademas que hicimos uso de los dos middlewares para chequear login y creditos suficientes. Y tuvimos que importar la clase del modelo Survey con `const Survey = mongoose.model("surveys");`
+Tambien usamos shorthands de ES6 para acortar el codigo.
+
+```javascript
+map(email => {
+  return { email: email };
+});
+```
+
+Es lo mismo que
+
+```javascript
+map(email => ({ email }));
+```
+
+## Email sending flow-chart
+
+![](images/emails-flow.png)
+Como vemos en el diagrama, la survay solo la vamos a guardar si el envio de mails fue exitoso.
+Para realizar el envio, lo que vamos a hacer es crear un "Mailer" que es un objeto que va a contener el Email-template y los destinatarios de dicho email.
+El Email template se va a completar automaticamente con los datos que se definan en la instancia de la Survey que se quiere enviar.
+Ese mailer se lo vamos a enviar a un proveedor de email para que realice el envio masivo.
+En nuestro caso vamos a usar **SendGrid** como proveedor de dicho servicio.
+
+![](images/email-approach.png)
+
+## SendGrid
+
+Sendgrid nos permite enviar masivamente emails, a partir de un unico objeto "Mailer".
+En nuestra aplicacion, tenemos que llevar un seguimiento de lo que respondio cada destinatario de la survey. Pero como nuestro template es unico, y el correo que le llega a cada destinatario es el mismo, no tenemos manera de reconocer quien fue el que apreto una opcion u otra de nuestra survey.
+Sendgrid se va a encargar de eso. Sendgrid lo que hace es leer todo nuestro template, y reemplazar los links que encuetre por links que estan dirigidos a sus servidores y luego redireccionar al cliente a la direccion inicial de nuestro template. Ademas, ellos para cada mail enviado, inyectan un token unico para cada destinatario. De esta manera, pueden monitoriar y seguir las interacciones de cada usuario con el email que les fue enviado.
+Ademas, cada vez que un usuario interactua con un link de nuestro email, SendGrid tiene la posibilidad de comunicarse con nuestros servidores y avisarnos de ello, y asi es como nosotros terminamos haciendo el seguimiento de las respuestas de usuarios, por intermedio de la API de SendGrid.
+
+![](images/sendgrid-linktracking.png)
+![](images/mailer.png)

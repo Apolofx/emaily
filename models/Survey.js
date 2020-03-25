@@ -17,4 +17,4 @@ const surveySchema = new Schema({
 });
 
 mongoose.model("surveys", surveySchema); //con esta linea, cargamos el esquema que
-//le dijimos anteriormente, en la coleccion user
+//le dijimos anteriormente, en la coleccion surveys
