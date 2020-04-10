@@ -28,11 +28,11 @@ Para testear la app localmente, podemos levantar el localserver directamente ins
 ```javascript
 var app = express();
 
-app.get("/", function(req, res) {
+app.get("/", function (req, res) {
   res.send("Hello World!");
 });
 
-app.listen(5000, function() {
+app.listen(5000, function () {
   console.log("Example app listening on port 5000!");
 });
 var express = require("express");
@@ -159,7 +159,7 @@ Ese id es el \_id: "iu1y3r87y4aksd" que genero MongoDB, y es la pieza de informa
 
 ```javascript
 passport.deserializeUser((id, done) => {
-  User.findById(id).then(user => {
+  User.findById(id).then((user) => {
     done(null, user);
   });
 });
@@ -176,7 +176,7 @@ Ademas tenemos que importar passport en nuestro index.js para poder usar las coo
 app.use(
   cookieSession({
     maxAge: 30 * 24 * 60 * 60 * 1000, //30 dias expresados en ms.
-    keys: [keys.cookieKey]
+    keys: [keys.cookieKey],
   })
 );
 ```
@@ -225,7 +225,7 @@ En nuestro codigo, el primero _middleware_ con el que nos encontramos es un **co
 app.use(
   cookieSession({
     maxAge: 30 * 24 * 60 * 60 * 1000, //30 dias expresados en ms.
-    keys: [keys.cookieKey]
+    keys: [keys.cookieKey],
   })
 );
 ```
@@ -273,7 +273,7 @@ _Ej:_
 
 ```javascript
 module.exports = {
-  tuViejaID: process.env.TU_VIEJA_ID
+  tuViejaID: process.env.TU_VIEJA_ID,
 };
 ```
 
@@ -370,7 +370,7 @@ Para versiones de CRA > 2.0+, vamos a usar el siguiente fix.
 ```javascript
 const proxy = require("http-proxy-middleware");
 
-module.exports = function(app) {
+module.exports = function (app) {
   app.use(proxy(["/api", "/auth/google"], { target: "http://localhost:5000" }));
 };
 ```
@@ -564,10 +564,10 @@ import { FETCH_USER } from "./types";
 
 //action creator
 export const fetchUser = () => {
-  return function(dispatch) {
+  return function (dispatch) {
     axios
       .get("/api/current_user")
-      .then(res => dispatch({ type: FETCH_USER, payload: res.data }));
+      .then((res) => dispatch({ type: FETCH_USER, payload: res.data }));
   };
 };
 ```
@@ -654,7 +654,7 @@ En **User.js**:
 ```javascript
 const userSchema = new Schema({
   googleId: String,
-  credits: { type: Number, default: 0 }
+  credits: { type: Number, default: 0 },
 });
 ```
 
@@ -664,7 +664,7 @@ Con el token, nosotros vamos a asegurarnos de que el pago se acredito y podremos
 **Token Action Creator:** Como los creditos van a formar parte del estado de la app, tenemos que generar un nuevo action creator.
 
 ```javascript
-export const handleToken = token => async dispatch => {
+export const handleToken = (token) => async (dispatch) => {
   const res = await axios.post("/api/stripe", token);
 
   dispatch({ type: FETCH_USER, payload: res.data });
@@ -684,7 +684,7 @@ class Payments extends Component {
         name="Emaily"
         description="$5 for 5 email credits"
         amount={500}
-        token={token => this.props.handleToken(token)}
+        token={(token) => this.props.handleToken(token)}
         stripeKey={process.env.REACT_APP_STRIPE_KEY}
       >
         <button className="btn light-blue">Add credits</button>
@@ -701,7 +701,7 @@ Para esto tenemos que crear el Route Handler que se encargue de recibir esa requ
 Creamos un nuevo route handler: _/server/routes/billingRoutes.js_ y usamos el mismo boilerplate que usamos con authRoutes:
 
 ```javascript
-modules.export = app => {
+modules.export = (app) => {
   app.post("/api/stripe", (req, res) => {});
 };
 ```
@@ -739,9 +739,9 @@ stripe.charges.create(
     amount: 2000,
     currency: "usd",
     source: "tok_visa",
-    description: "My First Test Charge (created for API docs)"
+    description: "My First Test Charge (created for API docs)",
   },
-  function(err, charge) {
+  function (err, charge) {
     // asynchronously called
   }
 );
@@ -754,13 +754,13 @@ Como cada metodo de la API de Stripe devuelve una Promesa de JS, vamos a usar As
 const keys = require("../config/keys");
 const stripe = require("stripe")(keys.stripeSecretKey);
 
-module.exports = app => {
+module.exports = (app) => {
   app.post("/api/stripe", async (req, res) => {
     const charge = await stripe.charges.create({
       amount: 500,
       currency: "usd",
       description: "$5 for 5 credits",
-      source: req.body.id
+      source: req.body.id,
     });
     console.log(charge);
   });
@@ -859,14 +859,14 @@ Esto equivale a hacer una actualizacion de la coleccion users de la base de dato
 Como forma parte del proceso de billing, lo vamos a hacer en la logica contenida en **billingRoutes.js**:
 
 ```javascript
-module.exports = app => {
+module.exports = (app) => {
   app.post("/api/stripe", async (req, res) => {
     const charge = await stripe.charges.create({
       amount: 500,
       currency: "usd",
       description: "$5 for 5 credits",
       source:
-        req.body.id /*esto lo obtenemos gracias al paquete npm body-parser*/
+        req.body.id /*esto lo obtenemos gracias al paquete npm body-parser*/,
     });
 
     req.user.credits += 5;
@@ -985,7 +985,7 @@ const mongoose = require("mongoose");
 const { Schema } = mongoose;
 const recipientSchema = new Schema({
   email: String,
-  responded: { type: Boolean, default: false }
+  responded: { type: Boolean, default: false },
 });
 
 module.exports = recipientSchema;
@@ -1034,7 +1034,7 @@ const requireCredits = require("../middlewares/requireCredits");
 
 const Survey = mongoose.model("surveys");
 
-module.exports = app => {
+module.exports = (app) => {
   app.post("/api/surveys", requireLogin, requireCredits, (req, res) => {
     const { title, subject, body, recipients } = req.body;
 
@@ -1042,7 +1042,7 @@ module.exports = app => {
       title,
       subject,
       body,
-      recipients: recipients.split(",").map(email => ({ email }))
+      recipients: recipients.split(",").map((email) => ({ email })),
     });
   });
 };
@@ -1052,7 +1052,7 @@ Vemos ademas que hicimos uso de los dos middlewares para chequear login y credit
 Tambien usamos shorthands de ES6 para acortar el codigo.
 
 ```javascript
-map(email => {
+map((email) => {
   return { email: email };
 });
 ```
@@ -1060,7 +1060,7 @@ map(email => {
 Es lo mismo que
 
 ```javascript
-map(email => ({ email }));
+map((email) => ({ email }));
 ```
 
 ## Email sending flow-chart
@@ -1083,3 +1083,47 @@ Ademas, cada vez que un usuario interactua con un link de nuestro email, SendGri
 
 ![](images/sendgrid-linktracking.png)
 ![](images/mailer.png)
+
+SendGrid tiene una clase Mail, con la que vamos a estar trabajando para configurar el cuerpo del mail al formato requerido y crear el objeto Mailer.
+Vamos a instalar el paquete de sendgrid para acceder a las funcionalidades de la API.
+`npm install sendgrid`.
+
+### Mailer
+
+_NOTA: Aca vamos a ver que el `Mailer.js` es un poco confuso en algunas partes de su configuracion. Esto se debe a que asi esta detallado en la Documentacion de la API de SendGrid. Considerar tambien que probablemente la nueva version de la API tenga un metodo de configuracion distinto._
+
+### surveyRoutes + Mailer.js + emailTemplates
+
+El servicio `Mailer`, lo vamos a estar usando dentro del RouteHandler `surveyRoutes`. De esta manera, el route handler recibe un POST del cliente que nos envia su objeto `survey`, y nosotros desempaquetamos ese objeto, usamos la informacion requerida para completar el `emailTemplate`, y usamos todos los datos requeridos de ese objeto `survey` para enviarle el modelo de Mailer a _SendGrid_, junto con el template.
+Todo esto se hace desde `surveyRoutes` cuando un cliente de _emaily_ consume el _endpoint_ `/api/surveys`. Dicho de otra forma, cada vez que un cliente de emaily genere una nueva Survey y la envie/guarde, lo que esta haciendo es acceder a la ruta `surveyRoutes` de nuestro servidor _Express_.
+
+#### Testeando la API:
+
+Si queremos testear la api sin tener toda la interfaz creada en nuestro front-end, podemos usar el paquete `axios` desde la consola del navegador para hacer un POST a la API.
+En una situacion normal se usarian herramientas como POSTMAN, que son REST clients, pero en nuestro caso estas tienen conflicto con OAuth.
+
+Para poder usar un paquete npm desde el navegador, lo importamos en el `/client/index.js`.
+
+```javascript
+import axios from "axios";
+window.axios = axios;
+```
+
+De esta manera ya tenemos disponible la libreria axios y todos sus metodos desde la consola del navegador.
+
+**Testeo**
+Nos vamos a la consola del navegador:
+
+1. ```javascript
+   const survey = {
+     title: "title",
+     subject: "subject",
+     body: "body",
+     recipients: "nuestro@email.com",
+   };
+   ```
+2. ```javascript
+   axios.post("api/surveys", survey);
+   ```
+
+Si ahora revisamos nuestro e-mail, tendriamos que tener un mail de "no-replay@emaily.com".
